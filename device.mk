@@ -26,7 +26,6 @@ DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
 # Rootdir files
 ROOTDIR_FILES := \
-    $(LOCAL_PATH)/ramdisk/init.rc \
     $(LOCAL_PATH)/ramdisk/init.board.rc \
     $(LOCAL_PATH)/ramdisk/init.sc8830.rc \
     $(LOCAL_PATH)/ramdisk/init.sc8830.usb.rc \
