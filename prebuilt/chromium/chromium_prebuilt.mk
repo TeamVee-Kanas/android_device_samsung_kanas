@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-LOCAL_PATH := device/samsung/vivalto3gvn/prebuilt/chromium
+LOCAL_PATH := device/samsung/kanas/prebuilt/chromium
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/framework/webview/paks/am.pak:system/framework/webview/paks/am.pak \
