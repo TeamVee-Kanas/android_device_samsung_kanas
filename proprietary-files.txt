@@ -21,9 +21,8 @@ lib/libsamsungpowersound.so
 
 # GPS
 etc/gps.conf
-etc/gps.xml
-bin/gpsd
-bin/gps.cer
+#etc/gps.xml
+#bin/gpsd
 lib/libsprd_agps_agent.so
 lib/hw/gps.default.so
 
@@ -34,7 +33,7 @@ lib/libboost.so
 lib/egl/libEGL_mali.so
 lib/egl/libGLESv1_CM_mali.so
 lib/egl/libGLESv2_mali.so
-#lib/hw/hwcomposer.scx15.so
+#lib/hw/hwcomposer.sc8830.so
 
 # Audio
 etc/audio_hw.xml
@@ -43,8 +42,8 @@ etc/audio_policy.conf
 etc/codec_pga.xml
 etc/tiny_hw.xml
 #bin/tinymix
-#lib/hw/audio.primary.scx15.so
-#lib/hw/audio_policy.scx15.so
+#lib/hw/audio.primary.sc8830.so
+#lib/hw/audio_policy.sc8830.so
 lib/libfactoryutil.so
 lib/libomission_avoidance.so
 #lib/libcontrolcsc.so
@@ -55,7 +54,7 @@ lib/libomission_avoidance.so
 #lib/libnvexchange.so
 #lib/libvbpga.so
 #lib/libdumpdata.so
-lib/libatchannel.so
+#lib/libatchannel.so
 #lib/libsonivox.so
 #lib/libsoundalive.so
 #lib/lib_soundaliveresampler.so
@@ -76,11 +75,11 @@ etc/wifi/nvram_mfg.txt
 bin/macloader
 
 # Bluetooth
-vendor/firmware/BCM4343A0_001.001.034.0038.0090_ORC_Vivalto-3G_3MC.hcd
+vendor/firmware/BCM4330B1_002.001.003.1025.1303.hcd
 
 # RIL
-etc/nvitem_td.cfg
-etc/nvitem_w.cfg
+#etc/nvitem_td.cfg
+#etc/nvitem_w.cfg
 bin/rild
 bin/modemd
 bin/nvitemd
@@ -99,14 +98,14 @@ lib/libsecnativefeature.so
 #lib/libseccameracore.so
 #lib/libseccamera_jni.so
 lib/libisp.so
-lib/libmorpho_facesolid.so
+#lib/libmorpho_facesolid.so
 lib/libmorpho_easy_hdr.so
-lib/hw/camera.scx15.so
-lib/hw/camera2.scx15.so
-#lib/hw/sprd_gsp.scx15.so
+lib/hw/camera.sc8830.so
+lib/hw/camera2.sc8830.so
+#lib/hw/sprd_gsp.sc8830.so
 
 # Sensors
-lib/hw/sensors.scx15.so
+lib/hw/sensors.sc8830.so
 
 # Media
 #etc/media_profiles.xml
