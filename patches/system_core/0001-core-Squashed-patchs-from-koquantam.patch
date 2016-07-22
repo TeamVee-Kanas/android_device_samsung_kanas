@@ -1,3 +1,24 @@
+From 309db2f111e0a9087e1ea4effb2739d62a57f47e Mon Sep 17 00:00:00 2001
+From: Caio Oliveira <caiooliveirafarias0@gmail.com>
+Date: Fri, 22 Jul 2016 12:22:36 -0300
+Subject: [PATCH] core: Squashed patchs from @koquantam
+
+Change-Id: Iab0caec4aac0f320dff8c0503b92d4fba8a7d148
+Signed-off-by: Caio Oliveira <caiooliveirafarias0@gmail.com>
+---
+ include/ion/ion.h         |   1 +
+ include/system/audio.h    |  19 +++++++
+ include/system/graphics.h |  14 +++++
+ init/Android.mk           |   2 +
+ init/builtins.c           | 134 ++++++++++++++++++++++++++++++++++++++++++++++
+ init/init_parser.c        |   2 +
+ init/keywords.h           |   4 ++
+ init/property_service.c   |   7 ++-
+ libcutils/properties.c    |   1 +
+ libion/Android.mk         |  11 ++--
+ libion/ion.c              |  14 ++---
+ 11 files changed, 194 insertions(+), 15 deletions(-)
+
 diff --git a/include/ion/ion.h b/include/ion/ion.h
 index 018c0a1..6122539 100644
 --- a/include/ion/ion.h
@@ -342,7 +363,7 @@ index 8b3c089..983fe60 100644
  #ifdef __MAKE_KEYWORD_ENUM__
      KEYWORD_COUNT,
 diff --git a/init/property_service.c b/init/property_service.c
-index 38c5248..c85d786 100644
+index 38c5248..722cfef 100644
 --- a/init/property_service.c
 +++ b/init/property_service.c
 @@ -72,6 +72,7 @@ struct {
@@ -353,15 +374,6 @@ index 38c5248..c85d786 100644
      { "gsm.",             AID_RADIO,    0 },
      { "persist.radio",    AID_RADIO,    0 },
      { "net.dns",          AID_RADIO,    0 },
-@@ -84,7 +85,7 @@ struct {
-     { "sys.powerctl",     AID_SHELL,    0 },
-     { "service.",         AID_SYSTEM,   0 },
-     { "wlan.",            AID_SYSTEM,   0 },
--    { "bluetooth.",       AID_BLUETOOTH,    0 },
-+    { "bluetooth.",       AID_BLUETOOTH,   0 },
-     { "dhcp.",            AID_SYSTEM,   0 },
-     { "dhcp.",            AID_DHCP,     0 },
-     { "debug.",           AID_SYSTEM,   0 },
 @@ -94,9 +95,11 @@ struct {
      { "service.adb.tcp.port", AID_SHELL,    0 },
      { "persist.mmac.", AID_SYSTEM, 0 },
@@ -465,3 +477,6 @@ index 4cd1697..8c5ab7f 100644
      return ion_ioctl(fd, ION_IOC_SYNC, &data);
 -#endif
  }
+-- 
+1.9.1
+

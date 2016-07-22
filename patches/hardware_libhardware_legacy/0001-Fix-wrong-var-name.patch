@@ -1,3 +1,12 @@
+From ee0ad24f254deca6f10c40b32872bca0e93a6589 Mon Sep 17 00:00:00 2001
+From: ngoquang2708 <ngoquang2708@users.noreply.github.com>
+Date: Tue, 29 Dec 2015 21:01:53 +0700
+Subject: [PATCH] Fix wrong var name
+
+---
+ wifi/wifi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/wifi/wifi.c b/wifi/wifi.c
 index d94b4a9..c40fb60 100644
 --- a/wifi/wifi.c
@@ -11,3 +20,6 @@ index d94b4a9..c40fb60 100644
              && strcmp(supp_status, "running") == 0) {
          return 0;
      }
+-- 
+1.9.1
+

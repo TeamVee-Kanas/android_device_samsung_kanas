@@ -1,0 +1,38 @@
+From 60c918539f9f0e83540501c6bcb33a756657e0af Mon Sep 17 00:00:00 2001
+From: Caio Oliveira <caiooliveirafarias0@gmail.com>
+Date: Fri, 22 Jul 2016 12:18:04 -0300
+Subject: [PATCH] Apply changes from https://github.com/TeamButter/patches.
+
+Change-Id: I9ba21ae81b99e158856d2fda497339d121f2079d
+Signed-off-by: Caio Oliveira <caiooliveirafarias0@gmail.com>
+---
+ include/hardware/audio.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/include/hardware/audio.h b/include/hardware/audio.h
+index 190a4d8..da63204 100644
+--- a/include/hardware/audio.h
++++ b/include/hardware/audio.h
+@@ -683,6 +683,19 @@ struct audio_hw_device {
+     void (*close_output_stream)(struct audio_hw_device *dev,
+                                 struct audio_stream_out* stream_out);
+ 
++#ifdef SPRD_HARDWARE
++    /** This method creates and opens the audio hardware output
++     *  for broadcast stream */
++    int (*open_broadcast_stream)(struct audio_hw_device *dev, uint32_t devices,
++                                 int format, uint32_t channels,
++                                 uint32_t sample_rate,
++                                 uint32_t audio_source,
++                                 struct audio_broadcast_stream **out);
++
++    void (*close_broadcast_stream)(struct audio_hw_device *dev,
++                                   struct audio_broadcast_stream *out);
++#endif
++
+     /** This method creates and opens the audio hardware input stream */
+ #ifndef ICS_AUDIO_BLOB
+     int (*open_input_stream)(struct audio_hw_device *dev,
+-- 
+1.9.1
+
