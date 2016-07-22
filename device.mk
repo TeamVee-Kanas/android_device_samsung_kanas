@@ -26,15 +26,15 @@ DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
 # Rootdir files
 ROOTDIR_FILES := \
+    $(LOCAL_PATH)/ramdisk/fstab.sc8830 \
     $(LOCAL_PATH)/ramdisk/init.board.rc \
-    $(LOCAL_PATH)/ramdisk/init.sc8830.rc \
-    $(LOCAL_PATH)/ramdisk/init.sc8830.usb.rc \
     $(LOCAL_PATH)/ramdisk/init.kanas3g.rc \
     $(LOCAL_PATH)/ramdisk/init.kanas3g_base.rc \
-    $(LOCAL_PATH)/ramdisk/init.wifi.rc \
     $(LOCAL_PATH)/ramdisk/init.recovery.sc8830.rc \
+    $(LOCAL_PATH)/ramdisk/init.sc8830.rc \
+    $(LOCAL_PATH)/ramdisk/init.sc8830.usb.rc \
+    $(LOCAL_PATH)/ramdisk/init.wifi.rc \
     $(LOCAL_PATH)/ramdisk/ueventd.sc8830.rc \
-    $(LOCAL_PATH)/ramdisk/fstab.sc8830 \
     $(LOCAL_PATH)/ramdisk/property_contexts
 
 PRODUCT_COPY_FILES += \
