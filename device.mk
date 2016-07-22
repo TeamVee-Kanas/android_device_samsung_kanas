@@ -26,7 +26,7 @@ DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
 # Rootdir files
 ROOTDIR_FILES := \
-    $(LOCAL_PATH)/ramdisk/fstab.sc8830 \
+    $(LOCAL_PATH)/ramdisk/fstab.kanas \
     $(LOCAL_PATH)/ramdisk/init.board.rc \
     $(LOCAL_PATH)/ramdisk/init.kanas3g.rc \
     $(LOCAL_PATH)/ramdisk/init.kanas3g_base.rc \

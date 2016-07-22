@@ -243,10 +243,7 @@ on boot
     setprop ro.multisim.simslotcount 2
 
 on fs
-#    mount_all /fstab.kanas3g
-# Temporary hack for root access
-	chmod 6755 /system/xbin/su
-#permissions for cpufreq
+    # permissions for cpufreq
     chown radio system sys/power/cpufreq_min_limit
     chown radio system sys/power/cpufreq_max_limit
     chown radio system sys/power/cpufreq_table

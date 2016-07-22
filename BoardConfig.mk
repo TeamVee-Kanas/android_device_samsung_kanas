@@ -145,7 +145,7 @@ BOARD_HARDWARE_CLASS := device/samsung/kanas/cmhw/
 
 # Recovery
 TARGET_RECOVERY_INITRC := device/samsung/kanas/ramdisk/init.recovery.rc
-TARGET_RECOVERY_FSTAB := device/samsung/kanas/ramdisk/fstab.kanas3gxx
+TARGET_RECOVERY_FSTAB := device/samsung/kanas/ramdisk/fstab.kanas
 TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/class/android_usb/android0/f_mass_storage/lun%d/file"
 BOARD_HAS_NO_MISC_PARTITION := true
 BOARD_RECOVERY_ALWAYS_WIPES := false
