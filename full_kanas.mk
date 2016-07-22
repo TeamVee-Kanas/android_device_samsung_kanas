@@ -14,19 +14,20 @@
 # limitations under the License.
 #
 
-# Inherit some common CM stuff.
-$(call inherit-product, vendor/cm/config/common_full_phone.mk)
+# Inherit from those products. Most specific first.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
 # Inherit device configuration
-$(call inherit-product, device/samsung/kanas/full_kanas.mk)
+$(call inherit-product, device/samsung/kanas/device.mk)
 
-# Boot animation
-TARGET_SCREEN_HEIGHT := 800
-TARGET_SCREEN_WIDTH := 480
-
-# Release name
-PRODUCT_RELEASE_NAME := kanas
+# Use prebuilt webviewchromium
+$(call inherit-product, device/samsung/kanas/prebuilt/chromium/chromium_prebuilt.mk)
 
 # Device identifier. This must come after all inclusions
-PRODUCT_NAME := cm_kanas
-PRODUCT_RELEASE_NAME := Galaxy Core 2
+PRODUCT_NAME := full_kanas
+PRODUCT_DEVICE := kanas
+PRODUCT_BRAND := samsung
+PRODUCT_MODEL := kanas
+PRODUCT_MANUFACTURER := samsung
+
+$(call inherit-product-if-exists, vendor/samsung/kanas/kanas-vendor.mk)
