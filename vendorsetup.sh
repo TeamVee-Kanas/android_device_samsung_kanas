@@ -12,12 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file is executed by build/envsetup.sh, and can use anything
-# defined in envsetup.sh.
-#
-# In particular, you can add lunch options with the add_lunch_combo
-# function: add_lunch_combo generic-eng
-
-for i in eng user userdebug; do
-add_lunch_combo cm_vivalto3gvn-${i};
-done
+add_lunch_combo cm_kanas-userdebug
+add_lunch_combo cm_kanas-eng
