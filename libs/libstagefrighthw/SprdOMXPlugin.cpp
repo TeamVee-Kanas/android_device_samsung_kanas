@@ -80,7 +80,7 @@ OMX_ERRORTYPE SprdOMXPlugin::makeComponentInstance(
         void *libHandle = dlopen(libName.c_str(), RTLD_NOW);
 
         if (libHandle == NULL) {
-            ALOGE("unable to dlopen %s, dlerror %s", libName.c_str(), dlerror());
+            ALOGE("unable to dlopen %s", libName.c_str());
 
             return OMX_ErrorComponentNotFound;
         }
