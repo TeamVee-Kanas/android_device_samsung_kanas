@@ -29,7 +29,6 @@ ROOTDIR_FILES := \
     $(LOCAL_PATH)/ramdisk/init.board.rc \
     $(LOCAL_PATH)/ramdisk/init.sc8830.rc \
     $(LOCAL_PATH)/ramdisk/init.sc8830.usb.rc \
-    $(LOCAL_PATH)/ramdisk/init.sc8830_ss.rc \
     $(LOCAL_PATH)/ramdisk/init.kanas3g.rc \
     $(LOCAL_PATH)/ramdisk/init.kanas3g_base.rc \
     $(LOCAL_PATH)/ramdisk/init.wifi.rc \
