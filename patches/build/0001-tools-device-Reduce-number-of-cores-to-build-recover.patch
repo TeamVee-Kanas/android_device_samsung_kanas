@@ -1,0 +1,27 @@
+From a5e4ae098b684de564db8499152f82b9ff487ea3 Mon Sep 17 00:00:00 2001
+From: Caio Oliveira <caiooliveirafarias0@gmail.com>
+Date: Sat, 23 Jul 2016 11:29:36 -0300
+Subject: [PATCH] tools: device: Reduce number of cores to build recovery
+
+Change-Id: Iacf9df4595c5765b751b2ae3ab5887b1b8cc0ccb
+Signed-off-by: Caio Oliveira <caiooliveirafarias0@gmail.com>
+---
+ tools/device/makerecoveries.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/device/makerecoveries.sh b/tools/device/makerecoveries.sh
+index d18c6c3..70049b7 100644
+--- a/tools/device/makerecoveries.sh
++++ b/tools/device/makerecoveries.sh
+@@ -56,7 +56,7 @@ do
+     fi
+     DEVICE_NAME=$(echo $TARGET_PRODUCT | sed s/koush_// | sed s/zte_// | sed s/cm_// | sed s/aosp_// |  sed s/motorola// | sed s/huawei_// | sed s/htc_// | sed s/_us// | sed s/cyanogen_// | sed s/generic_// | sed s/full_//)
+     PRODUCT_NAME=$(basename $OUT)
+-    make -j16 recoveryzip
++    make recoveryzip
+     RESULT=$?
+     if [ "$RESULT" != "0" ]
+     then
+-- 
+1.9.1
+
