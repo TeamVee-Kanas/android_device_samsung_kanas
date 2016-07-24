@@ -100,4 +100,3 @@ ro.telephony.ril_qanelements=6
 
 # Low memory device
 ro.config.low_ram=false
-
