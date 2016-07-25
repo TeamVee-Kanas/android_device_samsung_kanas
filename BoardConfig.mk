@@ -127,9 +127,6 @@ BOARD_HAS_NO_REAL_SDCARD := true
 BOARD_HAS_NO_SELECT_BUTTON := true
 TARGET_RECOVERY_PIXEL_FORMAT := "BGRA_8888"
 
-# Use prebuilt webviewchromium to cut down build time
-PRODUCT_PREBUILT_WEBVIEWCHROMIUM := yes
-
 # CMHW
 BOARD_HARDWARE_CLASS := device/samsung/kanas/cmhw/
 

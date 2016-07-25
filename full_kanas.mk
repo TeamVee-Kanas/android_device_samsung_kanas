@@ -20,9 +20,6 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 # Inherit device configuration
 $(call inherit-product, device/samsung/kanas/device.mk)
 
-# Use prebuilt webviewchromium
-$(call inherit-product, device/samsung/kanas/prebuilt/chromium/chromium_prebuilt.mk)
-
 # Device identifier. This must come after all inclusions
 PRODUCT_NAME := full_kanas
 PRODUCT_DEVICE := kanas
