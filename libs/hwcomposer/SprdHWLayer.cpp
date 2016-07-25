@@ -26,47 +26,69 @@
  **                                   SurfaceFligner composition. It will     *
  **                                   improve system performance.             *
  ******************************************************************************
- ** File: AndroidFence.h              DESCRIPTION                             *
- **                                   Handle Android Framework fence          *
+ ** File: SprdHWLayer.cpp             DESCRIPTION                             *
+ **                                   Mainly responsible for filtering HWLayer*
+ **                                   list, find layers that meet OverlayPlane*
+ **                                   and PrimaryPlane specifications and then*
+ **                                   mark them as HWC_OVERLAY.               *
  ******************************************************************************
  ******************************************************************************
  ** Author:         zhongjun.chen@spreadtrum.com                              *
  *****************************************************************************/
 
-#ifndef _ANDROID_FENCE_H_
-#define _ANDROID_FENCE_H_
-
-#include <fcntl.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <hardware/hardware.h>
-#include <hardware/hwcomposer.h>
-#include <utils/RefBase.h>
-#include <ui/Fence.h>
-#include <sync/sync.h>
-#include <utils/String8.h>
-
+#include "SprdHWLayer.h"
 
 using namespace android;
 
-extern int openSprdFence();
+bool SprdHWLayer:: checkRGBLayerFormat()
+{
+    hwc_layer_1_t *layer = mAndroidLayer;
+    if (layer == NULL)
+    {
+        return false;
+    }
 
-extern void closeSprdFence();
+    const native_handle_t *pNativeHandle = layer->handle;
+    struct private_handle_t *privateH = (struct private_handle_t *)pNativeHandle;
 
-extern int waitAcquireFence(hwc_display_contents_1_t *list);
+    if (pNativeHandle == NULL || privateH == NULL)
+    {
+        return false;
+    }
 
-extern void closeAcquireFDs(hwc_display_contents_1_t *list);
+    if ((privateH->format != HAL_PIXEL_FORMAT_RGBA_8888) &&
+        (privateH->format != HAL_PIXEL_FORMAT_RGBX_8888) &&
+        (privateH->format != HAL_PIXEL_FORMAT_RGB_565))
+    {
+        return false;
+    }
 
-extern int HWCBufferSyncBuild(hwc_display_contents_1_t *list, int display);
+    return true;
+}
 
-extern int FenceWaitForever(const String8& name, int fenceFd);
+bool SprdHWLayer:: checkYUVLayerFormat()
+{
+    hwc_layer_1_t *layer = mAndroidLayer;
+    if (layer == NULL)
+    {
+        return false;
+    }
 
-extern int HWCBufferSyncBuildForVirtualDisplay(hwc_display_contents_1_t *list);
+    const native_handle_t *pNativeHandle = layer->handle;
+    struct private_handle_t *privateH = (struct private_handle_t *)pNativeHandle;
 
-extern int HWCBufferSyncReleaseForVirtualDisplay(hwc_display_contents_1_t *list);
+    if (pNativeHandle == NULL || privateH == NULL)
+    {
+        return false;
+    }
 
-#endif
+    if ((privateH->format != HAL_PIXEL_FORMAT_YCbCr_420_SP) &&
+        (privateH->format != HAL_PIXEL_FORMAT_YCrCb_420_SP) &&
+        (privateH->format != HAL_PIXEL_FORMAT_YV12))
+    {
+        return false;
+    }
+
+    return true;
+}
+

@@ -32,6 +32,7 @@
 #include "Layer.h"
 #include "GLErro.h"
 #include "OverlayComposer.h"
+#include <hardware/hwcomposer.h>
 
 
 namespace android
@@ -51,15 +52,6 @@ namespace android
 #else
 #define GL_CHECK(x) x
 #endif
-
-
-static GLfloat vertices[] = {
-    0.0f, 0.0f,
-    0.0f, 0.0f,
-    0.0f,  0.0f,
-    0.0f,  0.0f
-};
-
 
 static GLfloat texcoords[] = {
     0.0f, 0.0f,
@@ -116,7 +108,7 @@ struct TexCoords {
 
 GLfloat mVertices[4][2];
 struct TexCoords texCoord[4];
-
+struct TexCoords vertices[4];
 
 Layer::Layer(OverlayComposer* composer, struct private_handle_t *h)
     : mComposer(composer), mPrivH(h),
@@ -244,6 +236,18 @@ void Layer::setLayerAlpha(float alpha)
     mAlpha = alpha;
 }
 
+void Layer::setBlendFlag(int32_t blendFlag)
+{
+    if (blendFlag == HWC_BLENDING_PREMULT)
+    {
+        mPremultipliedAlpha = true;
+    }
+    else
+    {
+        mPremultipliedAlpha = false;
+    }
+}
+
 bool Layer::setLayerTransform(uint32_t transform)
 {
     mTransform = transform;
@@ -337,11 +341,13 @@ void Layer::computeTransformMatrix()
                     // We know there's no subsampling of any channels, so we
                     // only need to shrink by a half a pixel.
                     shrinkAmount = 0.5;
+                    break;
 
                 default:
                     // If we don't recognize the format, we must assume the
                     // worst case (that we care about), which is YUV420.
-                    shrinkAmount = 1.0;
+                    shrinkAmount = 0.0;
+                    break;
             }
         }
 
@@ -381,87 +387,89 @@ bool Layer::prepareDrawData()
 {
     sp<GraphicBuffer>& buf(mGFXBuffer);
 
-    GLfloat left = GLfloat(mRect->left) / GLfloat(mRect->right);
-    GLfloat top = GLfloat(mRect->top) / GLfloat(mRect->bottom);
-    GLfloat right = GLfloat(mRect->right) / GLfloat(mRect->right);
-    GLfloat bottom = GLfloat(mRect->bottom) / GLfloat(mRect->bottom);
-
-    /*
-     *  The video layer height maybe loss some accuracy
-     *  when GPU transform float number into int number.
-     *  Here, just Compensate for the loss.
-     * */
-    int format = buf->getPixelFormat();
-    if ((mTransform == 0 ) &&
-        (format == HAL_PIXEL_FORMAT_YCbCr_420_SP ||
-        format == HAL_PIXEL_FORMAT_YCrCb_420_SP ||
-        format == HAL_PIXEL_FORMAT_YV12))
-    {
-        float height = float(mRect->bottom - mRect->top);
-        float pixelOffset = 1.0 / height;
-
-        top -= pixelOffset;
-        bottom += pixelOffset;
-    }
-
-    /*
-     *  Some RGB layer is cropped, it will cause RGB layer display abnormal.
-     *  Here, just correct the RGB layer to right region.
-     * */
-    if ((mRect->top > 0) &&
-        (format == HAL_PIXEL_FORMAT_RGBA_8888 ||
-         format == HAL_PIXEL_FORMAT_RGBX_8888 ||
-         format == HAL_PIXEL_FORMAT_RGB_565))
-    {
-        float pixelOffset = 1.0 / float(mRect->bottom);
-        top -= float(mRect->top) * pixelOffset;
-    }
+    /*Overlay play video is consistent  wtih GSP play video.
+     * Please refer to the SprdUtil.cpp
+     */
+    GLfloat left = GLfloat(mRect->left & 0xFFFFFFFE) / GLfloat(mPrivH->width);
+    GLfloat top = GLfloat(mRect->top & 0xFFFFFFFE) / GLfloat(mPrivH->height);
+    GLfloat right = GLfloat(mRect->right & 0xFFFFFFFE) / GLfloat(mPrivH->width);
+    /*Overlay play video maybe loss some accuracy,Bug313521*/
+    GLfloat bottom = GLfloat((mRect->bottom-1) & 0xFFFFFFFE) / GLfloat(mPrivH->height);
 
     texCoord[0].u = texCoord[1].u = left;
     texCoord[0].v = texCoord[3].v = top;
     texCoord[1].v = texCoord[2].v = bottom;
     texCoord[2].u = texCoord[3].u = right;
 
-
-    for (int i = 0; i < 4; i++)
-    {
-        texCoord[i].v = 1.0f - texCoord[i].v;
-    }
-
-
-
     /*
      *  Caculate the vertex coordinate
      * */
-    vertices[0] = (GLfloat)mRV->left;
-    vertices[1] = (GLfloat)mRV->top;
-    vertices[2] = (GLfloat)mRV->left;
-    vertices[3] = (GLfloat)mRV->bottom;
-    vertices[4] = (GLfloat)mRV->right;
-    vertices[5] = (GLfloat)mRV->bottom;
-    vertices[6] = (GLfloat)mRV->right;
-    vertices[7] = (GLfloat)mRV->top;
+    /*Overlay play video is consistent  wtih GSP play video.
+     * Please refer to the SprdUtil.cpp
+     */
+    left   = (GLfloat)(mRV->left & 0xFFFFFFFE);
+    if (mRV->top & 0x1) {
+        top = (GLfloat)(mRV->top + 1);
+    } else {
+        top = (GLfloat)(mRV->top);
+    }
+    right  = (GLfloat)(mRV->right & 0xFFFFFFFE);
+    bottom = (GLfloat)((mRV->bottom)& 0xFFFFFFFE);
 
-    unsigned int fb_height = mComposer->getDisplayPlane()->getHeight();
+    if (mTransform & NATIVE_WINDOW_TRANSFORM_FLIP_H) {
+        GLfloat temp = left;
+        left = right;
+        right = temp;
+    }
 
-    vertices[1] = (GLfloat)fb_height - vertices[1];
-    vertices[3] = (GLfloat)fb_height - vertices[3];
-    vertices[5] = (GLfloat)fb_height - vertices[5];
-    vertices[7] = (GLfloat)fb_height - vertices[7];
+    if (mTransform & NATIVE_WINDOW_TRANSFORM_FLIP_V) {
+        GLfloat temp = top;
+        top = bottom;
+        bottom = temp;
+    }
+
+    vertices[0].u = vertices[1].u = left;
+    vertices[0].v = vertices[3].v = top;
+    vertices[1].v = vertices[2].v = bottom;
+    vertices[2].u = vertices[3].u = right;
 
     /*
-     * Here, some region from SurfacFlinger have exceeded the screen
-     * size. So we remove these abnormal region, it will reduce some
-     * garbage when rotating the phone.
-     * Temporary disable this parameters check
+     * Rotate 90 degrees clockwise
      * */
-    /*if (mRV->left < 0 || mRV->left > mFBWidth || mRV->right == mRV->bottom ||
-        mRV->top < 0 || mRV->top > mFBHeight ||
-        mRV->right > mFBWidth || mRV->bottom > mFBHeight)
-    {
-        mSkipFlag = true;
-        memset(vertices, 0, sizeof(vertices));
-    }*/
+    if (mTransform & NATIVE_WINDOW_TRANSFORM_ROT_90) {
+        int left_top = 0, left_bottom = 0, right_top = 0, right_bottom = 0;
+        struct TexCoords    center,temp;
+
+        center.u = (left + right)/2;
+        center.v = (top + bottom)/2;
+
+        for (int i = 0; i < 4; i++) {
+            if (vertices[i].u > center.u ) {
+                if (vertices[i].v > center.v) {
+                    right_bottom = i;
+                } else {
+                    right_top = i;
+                }
+            } else {
+                if (vertices[i].v > center.v) {
+                    left_bottom = i;
+                } else {
+                    left_top = i;
+                }
+            }
+        }
+
+        temp                   = vertices[left_top];
+        vertices[left_top]     = vertices[right_top];
+        vertices[right_top]    = vertices[right_bottom];
+        vertices[right_bottom] = vertices[left_bottom];
+        vertices[left_bottom]  = temp;
+    }
+
+    unsigned int fb_height = mComposer->getDisplayPlane()->getHeight();
+    for (int i = 0; i < 4; i++) {
+        vertices[i].v = (GLfloat)fb_height - vertices[i].v;
+    }
 
    return true;
 }
@@ -490,9 +498,10 @@ int Layer::draw()
     glTexParameterx(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterx(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    computeTransformMatrix();
+    //computeTransformMatrix();
     glMatrixMode(GL_TEXTURE);
-    glLoadMatrixf(mCurrentTransformMatrix);
+    glLoadIdentity();
+    //glLoadMatrixf(mCurrentTransformMatrix);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -508,24 +517,24 @@ int Layer::draw()
      *  By default, we use Premultiplied Alpha
      * */
     GLenum src = mPremultipliedAlpha ? GL_ONE : GL_SRC_ALPHA;
-    //if (mAlpha < 0xFF)
-    //{
-    //    const GLfloat alpha = (GLfloat)mAlpha * (1.0f/255.0f);
-    //    if (mPremultipliedAlpha)
-    //    {
-    //        glColor4f(alpha, alpha, alpha, alpha);
-    //    }
-    //    else
-    //    {
-    //        glColor4f(1, 1, 1, alpha);
-    //    }
-    //    glEnable(GL_BLEND);
-    //    glBlendFunc(src, GL_ONE_MINUS_SRC_ALPHA);
-    //    glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    //}
-    //else
+    if (mAlpha < 0xFF)
     {
-        glColor4f(1, 1, 1, 1);
+        const GLfloat alpha = (GLfloat)mAlpha * (1.0f/255.0f);
+        if (mPremultipliedAlpha)
+        {
+            glColor4f(alpha, alpha, alpha, alpha);
+        }
+        else
+        {
+            glColor4f(1.0f, 1.0f, 1.0f, alpha);
+        }
+        glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glEnable(GL_BLEND);
+        glBlendFunc(src, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else
+    {
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         glEnable(GL_BLEND);
         glBlendFunc(src, GL_ONE_MINUS_SRC_ALPHA);

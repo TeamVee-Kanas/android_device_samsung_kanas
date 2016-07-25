@@ -36,6 +36,7 @@
 
 #include "SprdPrimaryDisplayDevice.h"
 #include <utils/String8.h>
+#include "../SprdTrace.h"
 
 using namespace android;
 
@@ -52,6 +53,10 @@ SprdPrimaryDisplayDevice:: SprdPrimaryDisplayDevice()
      mUtil(0),
      mPostFrameBuffer(true),
      mHWCDisplayFlag(HWC_DISPLAY_MASK),
+     mAcceleratorMode(ACCELERATOR_NON),
+#ifdef PROCESS_VIDEO_USE_GSP
+     mGXPCap(NULL),
+#endif
      mDebugFlag(0),
      mDumpFlag(0)
     {
@@ -60,11 +65,43 @@ SprdPrimaryDisplayDevice:: SprdPrimaryDisplayDevice()
 
 bool SprdPrimaryDisplayDevice:: Init(FrameBufferInfo **fbInfo)
 {
+    int GXPAddrType = 0;
+    void *pData = NULL;
+
     loadFrameBufferHAL(&mFBInfo);
     if (mFBInfo == NULL) {
         ALOGE("Can NOT get FrameBuffer info");
         return false;
     }
+
+    mUtil = new SprdUtil(mFBInfo);
+    if (mUtil == NULL) {
+        ALOGE("new SprdUtil failed");
+        return false;
+    }
+#ifdef PROCESS_VIDEO_USE_GSP
+    if(GXPAddrType == 0) {
+        //GXPAddrType = mUtil->getGSPAddrType();
+    }
+    mGXPCap = (GSP_CAPABILITY_T *)malloc(sizeof(GSP_CAPABILITY_T));
+    if (mGXPCap == NULL)
+    {
+        ALOGE("SprdPrimaryDisplayDevice:: Init malloc GSP_CAPABILITY_T failed");
+        return false;
+    }
+    if (mUtil->getGSPCapability(mGXPCap))
+    {
+        ALOGE("get gsp capability failed");
+    }
+
+    if (mGXPCap->magic != CAPABILITY_MAGIC_NUMBER)
+    {
+        ALOGE("SprdPrimaryDisplayDevice:: Init GXP device init failed");
+    }
+    pData = static_cast<void *>(mGXPCap);
+#endif
+
+    AcceleratorProbe(pData);
 
     mLayerList = new SprdHWLayerList(mFBInfo);
     if (mLayerList == NULL)
@@ -72,6 +109,9 @@ bool SprdPrimaryDisplayDevice:: Init(FrameBufferInfo **fbInfo)
         ALOGE("new SprdHWLayerList failed");
         return false;
     }
+#ifdef PROCESS_VIDEO_USE_GSP
+    mLayerList->transforGXPCapParameters(mGXPCap);
+#endif
 
     mPrimaryPlane = new SprdPrimaryPlane(mFBInfo);
     if (mPrimaryPlane == NULL)
@@ -120,12 +160,7 @@ bool SprdPrimaryDisplayDevice:: Init(FrameBufferInfo **fbInfo)
         return false;
     }
 
-    mUtil = new SprdUtil(mFBInfo);
-    if (mUtil == NULL)
-    {
-        ALOGE("new SprdUtil failed");
-        return false;
-    }
+
 
     *fbInfo = mFBInfo;
 
@@ -158,6 +193,13 @@ SprdPrimaryDisplayDevice:: ~SprdPrimaryDisplayDevice()
         delete mOverlayPlane;
         mOverlayPlane = NULL;
     }
+#ifdef PROCESS_VIDEO_USE_GSP
+    if (mGXPCap != NULL)
+    {
+        free(mGXPCap);
+        mGXPCap = NULL;
+    }
+#endif
 
     if (mLayerList)
     {
@@ -165,6 +207,151 @@ SprdPrimaryDisplayDevice:: ~SprdPrimaryDisplayDevice()
         mLayerList = NULL;
     }
 }
+
+int SprdPrimaryDisplayDevice:: AcceleratorProbe(void *pData)
+{
+    int accelerator = ACCELERATOR_NON;
+
+#ifdef PROCESS_VIDEO_USE_GSP
+    if (pData == NULL)
+    {
+        ALOGD("SprdPrimaryDisplayDevice:: AcceleratorProbe GXP device error");
+        return 0;
+    }
+    GSP_CAPABILITY_T *GXPCap = static_cast<GSP_CAPABILITY_T *>(pData);
+    if (GXPCap->buf_type_support == GSP_ADDR_TYPE_PHYSICAL)
+    {
+        accelerator |= ACCELERATOR_GSP;
+    }
+    else if (GXPCap->buf_type_support == GSP_ADDR_TYPE_IOVIRTUAL)
+    {
+        //accelerator &= ~ACCELERATOR_GSP;
+        accelerator |= ACCELERATOR_GSP_IOMMU;
+    }
+#endif
+
+#ifdef OVERLAY_COMPOSER_GPU
+    accelerator |= ACCELERATOR_OVERLAYCOMPOSER;
+#endif
+
+    mAcceleratorMode |= accelerator;
+
+    return 0;
+}
+
+int SprdPrimaryDisplayDevice:: AcceleratorAdapt(int DisplayDeviceAccelerator)
+{
+    int value = ACCELERATOR_NON;
+
+#ifdef FORCE_ADJUST_ACCELERATOR
+    if (DisplayDeviceAccelerator & ACCELERATOR_GSP_IOMMU)
+    {
+        if (mAcceleratorMode & ACCELERATOR_GSP_IOMMU)
+        {
+            value |= ACCELERATOR_GSP_IOMMU;
+            value |= ACCELERATOR_GSP;
+        }
+        else if (mAcceleratorMode & ACCELERATOR_GSP)
+        {
+            value |= ACCELERATOR_GSP;
+            value &= ~ACCELERATOR_GSP_IOMMU;
+        }
+    }
+    else if (DisplayDeviceAccelerator & ACCELERATOR_GSP)
+    {
+        if (mAcceleratorMode & ACCELERATOR_GSP)
+        {
+            value |= ACCELERATOR_GSP;
+            value &= ~ACCELERATOR_GSP_IOMMU;
+        }
+    }
+
+    if (DisplayDeviceAccelerator & ACCELERATOR_OVERLAYCOMPOSER)
+    {
+        if (mAcceleratorMode & ACCELERATOR_OVERLAYCOMPOSER)
+        {
+            value |= ACCELERATOR_OVERLAYCOMPOSER;
+        }
+    }
+#else
+    value |= mAcceleratorMode;
+#endif
+
+    ALOGI_IF(mDebugFlag, "SprdPrimaryDisplayDevice:: AcceleratorAdapt accelerator: 0x%x", value);
+    return value;
+}
+
+#ifdef HWC_DUMP_CAMERA_SHAKE_TEST
+void SprdPrimaryDisplayDevice:: dumpCameraShakeTest(hwc_display_contents_1_t* list)
+{
+    char value[PROPERTY_VALUE_MAX];
+    if ((0 != property_get("persist.sys.performance_camera", value, "0")) &&
+         (atoi(value) == 1))
+    {
+        for(unsigned int i = 0; i < list->numHwLayers; i++)
+        {
+            hwc_layer_1_t *l = &(list->hwLayers[i]);
+
+            if (l && ((l->flags & HWC_DEBUG_CAMERA_SHAKE_TEST) == HWC_DEBUG_CAMERA_SHAKE_TEST))
+            {
+                struct private_handle_t *privateH = (struct private_handle_t *)(l->handle);
+                if (privateH == NULL)
+                {
+                    continue;
+                }
+
+                void *cpuAddr = NULL;
+                int offset = 0;
+                int format = -1;
+                int width = privateH->width;
+                int height = privateH->stride;
+                cpuAddr = (void *)(privateH->base);
+                format = privateH->format;
+                if (format == HAL_PIXEL_FORMAT_RGBA_8888)
+                {
+                    int r = -1;
+                    int g = -1;
+                    int b = -1;
+                    int r2 = -1;
+                    int g2 = -1;
+                    int b2 = -1;
+                    int colorNumber = -1;
+
+                    /*
+                     *  read the pixel in the 1/4 of the layer
+                     * */
+                    offset = ((width>>1) * (height>>1))<<2;
+                    uint8_t *inrgb = (uint8_t *)((int *)cpuAddr + offset);
+
+                    r = *(inrgb++); // for r;
+                    g = *(inrgb++); // for g;
+                    b = *(inrgb++);
+                    inrgb++; // for a;
+                    r2 = *(inrgb++); // for r;
+                    g2 = *(inrgb++); // for g;
+                    b2 = *(inrgb++);
+
+                    if ((r == 205) && (g == 0) && (b == 252))
+                    {
+                        colorNumber = 0;
+                    }
+                    else if ((r == 15) && (g == 121) && (b == 0))
+                    {
+                        colorNumber = 1;
+                    }
+                    else if ((r == 31) && (g == 238) && (b == 0))
+                    {
+                        colorNumber = 2;
+                    }
+
+                    ALOGD("[HWComposer] will post camera shake test color:%d to LCD, 1st pixel in the middle of screen [r=%d, g=%d, b=%d], 2st pixel[r=%d, g=%d, b=%d]",
+                           colorNumber, r, g, b, r2, g2, b2);
+                }
+            }
+        }
+    }
+}
+#endif
 
 int SprdPrimaryDisplayDevice:: getDisplayAttributes(DisplayAttributes *dpyAttributes)
 {
@@ -193,12 +380,12 @@ int SprdPrimaryDisplayDevice:: getDisplayAttributes(DisplayAttributes *dpyAttrib
     return 0;
 }
 
-int SprdPrimaryDisplayDevice:: reclaimPlaneBuffer(SprdHWLayer *YUVLayer)
+int SprdPrimaryDisplayDevice:: reclaimPlaneBuffer(bool condition)
 {
     static int ret = -1;
     enum PlaneRunStatus status = PLANE_STATUS_INVALID;
 
-    if (YUVLayer == NULL)
+    if (condition == false)
     {
         mPrimaryPlane->recordPlaneIdleCount();
 
@@ -337,10 +524,11 @@ int SprdPrimaryDisplayDevice:: attachToDisplayPlane(int DisplayFlag)
     return 0;
 }
 
-int SprdPrimaryDisplayDevice:: prepare(hwc_display_contents_1_t *list)
+int SprdPrimaryDisplayDevice:: prepare(hwc_display_contents_1_t *list, unsigned int accelerator)
 {
     int ret = false;
     int displayFlag = HWC_DISPLAY_MASK;
+    int acceleratorLocal = ACCELERATOR_NON;
 
     queryDebugFlag(&mDebugFlag);
 
@@ -352,7 +540,9 @@ int SprdPrimaryDisplayDevice:: prepare(hwc_display_contents_1_t *list)
         return -1;
     }
 
-    ret = mLayerList->updateGeometry(list);
+    acceleratorLocal = AcceleratorAdapt(accelerator);
+
+    ret = mLayerList->updateGeometry(list, acceleratorLocal);
     if (ret != 0)
     {
         ALOGE("(FILE:%s, line:%d, func:%s) updateGeometry failed",
@@ -380,6 +570,7 @@ int SprdPrimaryDisplayDevice:: prepare(hwc_display_contents_1_t *list)
 
 int SprdPrimaryDisplayDevice:: commit(hwc_display_contents_1_t* list)
 {
+    HWC_TRACE_CALL;
     int ret = -1;
     bool DisplayFBTarget = false;
     bool DisplayPrimaryPlane = false;
@@ -392,6 +583,13 @@ int SprdPrimaryDisplayDevice:: commit(hwc_display_contents_1_t* list)
     private_handle_t* buffer2 = NULL;
 
     hwc_layer_1_t *FBTargetLayer = NULL;
+
+
+    int OSDLayerCount = mLayerList->getOSDLayerCount();
+    int VideoLayerCount = mLayerList->getVideoLayerCount();
+    SprdHWLayer **OSDLayerList = mLayerList->getSprdOSDLayerList();
+    SprdHWLayer **VideoLayerList = mLayerList->getSprdVideoLayerList();
+
 
     if (list == NULL)
     {
@@ -406,7 +604,7 @@ int SprdPrimaryDisplayDevice:: commit(hwc_display_contents_1_t* list)
 
     waitAcquireFence(list);
 
-    syncReleaseFence(list, DISPLAY_PRIMARY);
+    HWCBufferSyncBuild(list, DISPLAY_PRIMARY);
 
     switch ((mHWCDisplayFlag & ~HWC_DISPLAY_MASK))
     {
@@ -436,7 +634,7 @@ int SprdPrimaryDisplayDevice:: commit(hwc_display_contents_1_t* list)
             DisplayOverlayComposerGSP = true;
             break;
         default:
-            ALOGI("Do not support display type: %d", (mHWCDisplayFlag & ~HWC_DISPLAY_MASK));
+            ALOGI_IF(mDebugFlag, "Display type: %d, use FBTarget", (mHWCDisplayFlag & ~HWC_DISPLAY_MASK));
             DisplayFBTarget = true;
             break;
     }
@@ -471,6 +669,10 @@ int SprdPrimaryDisplayDevice:: commit(hwc_display_contents_1_t* list)
                 FBTargetLayer->acquireFenceFd = -1;
             }
         }
+
+#ifdef HWC_DUMP_CAMERA_SHAKE_TEST
+        dumpCameraShakeTest(list);
+#endif
 
 #ifdef SPRD_DITHER_ENABLE
         if(!((mLayerList->getVideoLayerCount() != 0) || (mLayerList->getYuvLayerCount() != 0))) {
@@ -536,14 +738,17 @@ int SprdPrimaryDisplayDevice:: commit(hwc_display_contents_1_t* list)
     {
         mPrimaryPlane->dequeueBuffer();
 
-        buffer2 = mPrimaryPlane->getPlaneBuffer();
-
         DirectDisplayFlag = mPrimaryPlane->GetDirectDisplay();
+        if (DirectDisplayFlag == false)
+        {
+            buffer2 = mPrimaryPlane->getPlaneBuffer();
+        }
     }
     else
     {
        mPrimaryPlane->disable();
     }
+
 
     if (DisplayOverlayPlane ||
         (DisplayPrimaryPlane && DirectDisplayFlag == false))
@@ -566,13 +771,45 @@ int SprdPrimaryDisplayDevice:: commit(hwc_display_contents_1_t* list)
 #endif
 
 #ifdef PROCESS_VIDEO_USE_GSP
-        if(mUtil->composerLayers(OverlayLayer, PrimaryLayer, buffer1, buffer2))
+        if (OverlayLayer)
+        {
+            if (mOverlayPlane->getPlaneFormat() == PLANE_FORMAT_RGB888)
+            {
+                      mUtil->UpdateOutputFormat(GSP_DST_FMT_RGB888);
+            }
+            else if (mOverlayPlane->getPlaneFormat() == PLANE_FORMAT_YUV422)
+            {
+                      mUtil->UpdateOutputFormat(GSP_DST_FMT_YUV422_2P);
+            }
+            else if (mOverlayPlane->getPlaneFormat() == PLANE_FORMAT_YUV420)
+            {
+                      mUtil->UpdateOutputFormat(GSP_DST_FMT_YUV420_2P);
+            }
+        }
+        else if (OverlayLayer == NULL && PrimaryLayer != NULL)
+        {
+            if (mPrimaryPlane->getPlaneFormat() == PLANE_FORMAT_RGB888)
+            {
+                      mUtil->UpdateOutputFormat(GSP_DST_FMT_RGB888);
+            }
+            else if (mPrimaryPlane->getPlaneFormat() == PLANE_FORMAT_RGB565)
+            {
+                      mUtil->UpdateOutputFormat(GSP_DST_FMT_RGB565);
+            }
+        }
+
+        //if(mUtil->composerLayers(OverlayLayer, PrimaryLayer, buffer1, buffer2))
+        if(mUtil->composerLayerList(VideoLayerList, VideoLayerCount, OSDLayerList, OSDLayerCount, buffer1, buffer2))
         {
             ALOGE("%s[%d],composerLayers ret err!!",__func__,__LINE__);
         }
         else
         {
             ALOGI_IF(mDebugFlag, "%s[%d],composerLayers success",__func__,__LINE__);
+
+#ifdef HWC_DUMP_CAMERA_SHAKE_TEST
+            dumpCameraShakeTest(list);
+#endif
         }
         /*
          *  Use GSP to do 2 layer blending, so if PrimaryLayer is not NULL,
@@ -623,8 +860,6 @@ displayDone:
    }
 
     closeAcquireFDs(list);
-
-    createRetiredFence(list);
 
     return 0;
 }

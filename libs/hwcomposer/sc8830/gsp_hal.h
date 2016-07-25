@@ -26,11 +26,8 @@
 #include <stdlib.h>
 #include <hardware/hardware.h>
 
-#include <gsp_types_shark.h>
+#include "gsp_types_shark.h"
 #include "../sc8825/dcam_hal.h"
-
-
-
 
 
 
@@ -123,8 +120,12 @@ note:1 the source and destination image buffer should be physical-coherent memor
 extern int32_t GSP_Proccess(GSP_CONFIG_INFO_T *pgsp_cfg_info);
 
 
-
-
+/*
+func:GSP_GetCapability
+desc:get GSP capability, like buffer addr type, scaling range
+return:
+*/
+extern int32_t GSP_GetCapability(GSP_CAPABILITY_T *pGsp_cap);
 
 /**
  * The id of this module
@@ -358,6 +359,12 @@ typedef struct gsp_device_t
     */
     int32_t (*GSP_Proccess)(GSP_CONFIG_INFO_T *pgsp_cfg_info);//GSP_Proccess
 
+    /*
+    func:GSP_GetCapability
+    desc:get GSP capability, like buffer addr type, scaling range
+    return:
+    */
+    int32_t (*GSP_GetCapability)(GSP_CAPABILITY_T *pGsp_cap);
 
 } gsp_device_t;
 
