@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
-	SPRDVPXDecoder.cpp
+	SPRDMPEG4Decoder.cpp
 
 LOCAL_C_INCLUDES := \
 	frameworks/av/media/libstagefright/include \
@@ -12,7 +12,7 @@ LOCAL_C_INCLUDES := \
 	frameworks/native/include/ui \
 	frameworks/native/include/utils \
 	frameworks/native/include/media/hardware \
-	$(LOCAL_PATH)/../../../gralloc \
+	$(LOCAL_PATH)/../../../../gralloc \
 	$(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include/video
 
 LOCAL_ADDITIONAL_DEPENDENCIES += \
@@ -35,7 +35,7 @@ LOCAL_SHARED_LIBRARIES := \
 	libdl \
 	liblog
 
-LOCAL_MODULE := libstagefright_sprd_vpxdec
+LOCAL_MODULE := libstagefright_sprd_mpeg4dec
 LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_SHARED_LIBRARY)
