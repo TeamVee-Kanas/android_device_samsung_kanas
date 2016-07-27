@@ -18,7 +18,7 @@
 #define LOG_TAG "SprdOMXComponent"
 #include <utils/Log.h>
 
-#include <SprdOMXComponent.h>
+#include "include/SprdOMXComponent.h"
 
 #include <media/stagefright/foundation/ADebug.h>
 

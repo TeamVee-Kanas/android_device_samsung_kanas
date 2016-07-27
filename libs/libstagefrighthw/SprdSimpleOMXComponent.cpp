@@ -18,7 +18,7 @@
 #define LOG_TAG "SprdSimpleOMXComponent"
 #include <utils/Log.h>
 
-#include <SprdSimpleOMXComponent.h>
+#include "include/SprdSimpleOMXComponent.h"
 
 #include "gralloc_priv.h"
 
