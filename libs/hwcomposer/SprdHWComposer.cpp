@@ -53,7 +53,6 @@ void SprdHWComposer:: resetDisplayAttributes()
         dpyAttr->xdpi = 0;
         dpyAttr->ydpi = 0;
         dpyAttr->connected = false;
-        dpyAttr->AcceleratorMode = ACCELERATOR_NON;
     }
 }
 
@@ -101,12 +100,6 @@ bool SprdHWComposer:: Init()
         return false;
     }
 
-    if ((mVirtualDisplay->Init() != 0))
-    {
-        ALOGE("VirtualDisplay Init failed");
-        return false;
-    }
-
     mVirtualDisplay->getDisplayAttributes(&(mDisplayAttributes[DISPLAY_VIRTUAL]));
 
     openSprdFence();
@@ -138,50 +131,11 @@ SprdHWComposer:: ~SprdHWComposer()
     mInitFlag = 0;
 }
 
-int SprdHWComposer:: DevicePropertyProbe(size_t numDisplays, hwc_display_contents_1_t **displays)
-{
-    int ret = -1;
-    for(unsigned int i = 0; i < numDisplays; i++)
-    {
-        hwc_display_contents_1_t *display = displays[i];
-
-        switch(i)
-        {
-            case DISPLAY_PRIMARY:
-                mDisplayAttributes[DISPLAY_PRIMARY].AcceleratorMode |= ACCELERATOR_GSP;
-                mDisplayAttributes[DISPLAY_PRIMARY].AcceleratorMode |= ACCELERATOR_GSP_IOMMU;
-                mDisplayAttributes[DISPLAY_PRIMARY].AcceleratorMode |= ACCELERATOR_OVERLAYCOMPOSER;
-                ret = 0;
-                break;
-            case DISPLAY_EXTERNAL:
-                ret = 0;
-                break;
-            case DISPLAY_VIRTUAL:
-                 if (display != NULL)
-                 {
-                     mDisplayAttributes[DISPLAY_VIRTUAL].AcceleratorMode |= ACCELERATOR_GSP;
-                     mDisplayAttributes[DISPLAY_VIRTUAL].AcceleratorMode |= ACCELERATOR_GSP_IOMMU;
-                     mDisplayAttributes[DISPLAY_PRIMARY].AcceleratorMode &= ~ACCELERATOR_GSP;
-                     mDisplayAttributes[DISPLAY_PRIMARY].AcceleratorMode &= ~ACCELERATOR_GSP_IOMMU;
-                 }
-                ret = 0;
-                break;
-            default:
-                ret = -EINVAL;
-        }
-    }
-
-    return ret;
-}
 
 int SprdHWComposer:: prepareDisplays(size_t numDisplays, hwc_display_contents_1_t **displays)
 {
     int ret = 0;
 
-#ifdef FORCE_ADJUST_ACCELERATOR
-    DevicePropertyProbe(numDisplays, displays);
-#endif
-
     for(unsigned int i = 0; i < numDisplays; i++)
     {
         hwc_display_contents_1_t *display = displays[i];
@@ -189,13 +143,13 @@ int SprdHWComposer:: prepareDisplays(size_t numDisplays, hwc_display_contents_1_
         switch(i)
         {
             case DISPLAY_PRIMARY:
-                mPrimaryDisplay->prepare(display, mDisplayAttributes[DISPLAY_PRIMARY].AcceleratorMode);
+                mPrimaryDisplay->prepare(display);
                 break;
             case DISPLAY_EXTERNAL:
-                mExternalDisplay->prepare(display, mDisplayAttributes[DISPLAY_EXTERNAL].AcceleratorMode);
+                mExternalDisplay->prepare(display);
                 break;
             case DISPLAY_VIRTUAL:
-                mVirtualDisplay->prepare(display,  mDisplayAttributes[DISPLAY_VIRTUAL].AcceleratorMode);
+                mVirtualDisplay->prepare(display);
                 break;
             default:
                 ret = -EINVAL;
@@ -279,6 +233,11 @@ int SprdHWComposer:: blank(int disp, int blank)
 
 int SprdHWComposer:: query(int what, int* value)
 {
+#ifdef HWC_SUPPORT
+    *value = 1;
+#else
+    *value = 0;
+#endif
     return 0;
 }
 

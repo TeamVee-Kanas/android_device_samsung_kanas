@@ -34,7 +34,7 @@
 
 
 static int debugenable = 0;
-//#define ALL_EVEN
+
 
 static int32_t gsp_hal_layer0_params_check (GSP_LAYER0_CONFIG_INFO_T *layer0_info)
 {
@@ -46,15 +46,6 @@ static int32_t gsp_hal_layer0_params_check (GSP_LAYER0_CONFIG_INFO_T *layer0_inf
         return GSP_NO_ERR;
     }
 
-#ifndef ALL_EVEN
-    if((GSP_SRC_FMT_RGB565 < layer0_info->img_format && layer0_info->img_format<GSP_SRC_FMT_8BPP)
-       && (layer0_info->clip_rect.st_x & 0x1 || layer0_info->clip_rect.st_y & 0x1
-           ||layer0_info->clip_rect.rect_w & 0x1 || layer0_info->clip_rect.rect_h & 0x1))
-    {
-        ALOGE("param check err: Line:%d\n", __LINE__);
-        return GSP_HAL_PARAM_CHECK_ERR;
-    }
-#else
     if(layer0_info->clip_rect.st_x & 0x1
             ||layer0_info->clip_rect.st_y & 0x1
             ||layer0_info->clip_rect.rect_w & 0x1
@@ -66,7 +57,6 @@ static int32_t gsp_hal_layer0_params_check (GSP_LAYER0_CONFIG_INFO_T *layer0_inf
         ALOGE("param check err: Line:%d\n", __LINE__);
         return GSP_HAL_PARAM_CHECK_ERR;
     }
-#endif
 
     //source check
     if((layer0_info->pitch & 0xfffff000UL)// pitch > 4095
@@ -240,15 +230,6 @@ static int32_t gsp_hal_layer1_params_check(GSP_LAYER1_CONFIG_INFO_T *layer1_info
         return GSP_NO_ERR;
     }
 
-#ifndef ALL_EVEN
-    if((GSP_SRC_FMT_RGB565 < layer1_info->img_format && layer1_info->img_format<GSP_SRC_FMT_8BPP)
-       && (layer1_info->clip_rect.st_x & 0x1 || layer1_info->clip_rect.st_y & 0x1
-           ||layer1_info->clip_rect.rect_w & 0x1 || layer1_info->clip_rect.rect_h & 0x1))
-    {
-        ALOGE("param check err: Line:%d\n", __LINE__);
-        return GSP_HAL_PARAM_CHECK_ERR;
-    }
-#else
     if(layer1_info->clip_rect.st_x & 0x1
             ||layer1_info->clip_rect.st_y & 0x1
             ||layer1_info->clip_rect.rect_w & 0x1
@@ -258,7 +239,6 @@ static int32_t gsp_hal_layer1_params_check(GSP_LAYER1_CONFIG_INFO_T *layer1_info
         ALOGE("param check err: Line:%d\n", __LINE__);
         return GSP_HAL_PARAM_CHECK_ERR;
     }
-#endif
 
     //source check
     if( (layer1_info->pitch & 0xf000UL)// pitch > 4095
@@ -447,7 +427,6 @@ static int32_t gsp_hal_layerdes_params_check(GSP_CONFIG_INFO_T *gsp_cfg_info)
     }
 
     if((GSP_DST_FMT_YUV420_2P <= layer_des_info->img_format) && (layer_des_info->img_format <= GSP_DST_FMT_YUV422_2P)) { //des color is yuv
-#ifdef ALL_EVEN
         if((layer0_info->des_rect.st_x & 0x01)
                 ||(layer0_info->des_rect.st_y & 0x01)
                 ||(layer1_info->des_pos.pos_pt_x & 0x01)
@@ -456,7 +435,6 @@ static int32_t gsp_hal_layerdes_params_check(GSP_CONFIG_INFO_T *gsp_cfg_info)
             ALOGE("param check err: Line:%d\n", __LINE__);
             return GSP_HAL_PARAM_CHECK_ERR;
         }
-#endif
     }
 
     if(layer_des_info->compress_r8_en == 1
@@ -612,7 +590,6 @@ notes:
 int32_t gsp_hal_close(int32_t gsp_fd)
 {
     if(gsp_fd == -1) {
-        ALOGE("%s[%d]: err gsp_fd is null! return.\n",__func__, __LINE__);
         return GSP_HAL_PARAM_ERR;
     }
 
@@ -657,7 +634,6 @@ int32_t gsp_hal_config(int32_t gsp_fd,GSP_CONFIG_INFO_T *gsp_cfg_info)
     }
     return ret;
 }
-
 
 
 
@@ -740,7 +716,7 @@ int32_t GSP_Proccess(GSP_CONFIG_INFO_T *pgsp_cfg_info)
         ALOGE("%s:%d,cfg gsp failed \n", __func__, __LINE__);
         goto exit;
     }
-/*    ret = gsp_hal_trigger(gsp_fd);
+    ret = gsp_hal_trigger(gsp_fd);
     if(0 != ret) {
         ALOGE("%s:%d,trigger gsp failed \n", __func__, __LINE__);
         goto exit;
@@ -752,72 +728,13 @@ int32_t GSP_Proccess(GSP_CONFIG_INFO_T *pgsp_cfg_info)
         goto exit;
     }
 
-*/
+
 exit:
     //ret = gsp_hal_close(gsp_fd);
     gsp_hal_close(gsp_fd);
     return ret;
+
 }
-
-
-
-/*
-func:GSP_GetCapability
-desc:get GSP capability , such as buffer addr type, layer count..
-return:
-*/
-
-int32_t GSP_GetCapability(GSP_CAPABILITY_T *pGsp_cap)
-{
-    static volatile GSP_CAPABILITY_T Gsp_cap;
-    int32_t ret = 0;
-    int32_t gsp_fd = -1;
-
-    if(pGsp_cap == NULL)
-    {
-        ALOGE("%s[%d]: err pType is null! return.\n",__func__,__LINE__);
-        return GSP_HAL_PARAM_ERR;
-    }
-    if(Gsp_cap.magic == CAPABILITY_MAGIC_NUMBER)
-    {
-        //*pGsp_cap = Gsp_cap;
-        memcpy((void*)pGsp_cap, (const void*)&Gsp_cap, sizeof(Gsp_cap));
-    }
-    else
-    {
-        gsp_fd = gsp_hal_open();
-        if(-1 == gsp_fd)
-        {
-            ALOGE("%s:%d,opend gsp failed \n", __func__, __LINE__);
-            return GSP_HAL_KERNEL_DRIVER_NOT_EXIST;
-        }
-
-        ret = ioctl(gsp_fd, GSP_IO_GET_CAPABILITY, &Gsp_cap);
-        if(0 == ret )
-        {
-            ALOGI_IF(debugenable,"GET_CAPABILITY ret ok\n");
-
-            if( Gsp_cap.magic == CAPABILITY_MAGIC_NUMBER)
-            {
-                ALOGI_IF(debugenable,"GET_CAPABILITY success\n");
-                memcpy((void*)pGsp_cap, (const void*)&Gsp_cap, sizeof(Gsp_cap));
-            }
-            else
-            {
-                ALOGI_IF(debugenable,"GET_CAPABILITY failed\n");
-            }
-        }
-        else
-        {
-            ALOGE("GET_CAPABILITY err:%d  . Line:%d \n",ret, __LINE__);
-            ret =-1;
-        }
-        gsp_hal_close(gsp_fd);
-    }
-
-    return ret;
-}
-
 
 
 #if 1//ndef _HWCOMPOSER_USE_GSP_BLEND
@@ -915,11 +832,9 @@ static GSP_ROT_ANGLE_E HAL2Kernel_RotMirrConvert(int degree)
     case -270:
         result_degree = GSP_ROT_ANGLE_270_M;
         break;
-    case 0:
-        result_degree = GSP_ROT_ANGLE_0;
-        break;
     default:
         ALOGE("Camera_rotation err : angle %d not supported. Line:%d ", degree, __LINE__);
+    case 0:
         result_degree = GSP_ROT_ANGLE_0;
         break;
     }
@@ -1764,8 +1679,6 @@ static int open_gsp(const struct hw_module_t* module,
     ctx->device.transform_layer = transform_layer;
 #endif
     ctx->device.GSP_Proccess = GSP_Proccess;
-    ctx->device.GSP_GetCapability= GSP_GetCapability;
-
     ctx->mAlpha = 0;
     ctx->mFlags = 0;
     ctx->mFD = 0;//gsp_hal_open();
@@ -1793,15 +1706,18 @@ open:
 gsp_module_t HAL_MODULE_INFO_SYM = {
 common:
     {
-        tag: HARDWARE_MODULE_TAG,
+tag:
+        HARDWARE_MODULE_TAG,
         version_major: 1,
         version_minor: 0,
-        id: GSP_HARDWARE_MODULE_ID,
-        name: "SPRD 2D Accelerate Module",
-        author: "Google, Inc.",
-        methods: &gsp_module_methods,
-        dso: 0,
-        reserved: {0},
+id:
+        GSP_HARDWARE_MODULE_ID,
+name: "SPRD 2D Accelerate Module"
+        ,
+author: "Google, Inc."
+        ,
+methods:
+        &gsp_module_methods
     }
 };
 

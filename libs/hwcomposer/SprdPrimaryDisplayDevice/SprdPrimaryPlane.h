@@ -39,7 +39,7 @@
 
 #include <cutils/log.h>
 #include "SprdDisplayPlane.h"
-#include "../SprdHWLayer.h"
+#include "SprdHWLayer.h"
 #include "SprdFrameBufferHAL.h"
 
 #ifdef BORROW_PRIMARYPLANE_BUFFER
@@ -117,7 +117,6 @@ public:
         return mDirectDisplayFlag;
     }
 
-    enum PlaneFormat getPlaneFormat();
 
 private:
     FrameBufferInfo *mFBInfo;
@@ -142,6 +141,9 @@ private:
     virtual private_handle_t* flush();
 
     void InvalidatePlaneContext();
+
+    enum PlaneFormat getPlaneFormat();
+
 
     int checkHWLayer(SprdHWLayer *l);
 

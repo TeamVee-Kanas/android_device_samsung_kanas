@@ -54,7 +54,6 @@
 #include "SprdVirtualDisplayDevice/SprdVirtualDisplayDevice.h"
 #include "SprdExternalDisplayDevice/SprdExternalDisplayDevice.h"
 #include "SprdDisplayDevice.h"
-#include "SprdUtil.h"
 
 #include "dump.h"
 
@@ -143,8 +142,6 @@ private:
     int mDumpFlag;
 
     void resetDisplayAttributes();
-
-    int DevicePropertyProbe(size_t numDisplays, hwc_display_contents_1_t **displays);
 };
 
 #endif

@@ -50,7 +50,6 @@
 #include <sync/sync.h>
 #include <utils/String8.h>
 
-
 using namespace android;
 
 extern int openSprdFence();
@@ -61,12 +60,10 @@ extern int waitAcquireFence(hwc_display_contents_1_t *list);
 
 extern void closeAcquireFDs(hwc_display_contents_1_t *list);
 
-extern int HWCBufferSyncBuild(hwc_display_contents_1_t *list, int display);
+extern void createRetiredFence(hwc_display_contents_1_t *list);
 
 extern int FenceWaitForever(const String8& name, int fenceFd);
 
-extern int HWCBufferSyncBuildForVirtualDisplay(hwc_display_contents_1_t *list);
-
-extern int HWCBufferSyncReleaseForVirtualDisplay(hwc_display_contents_1_t *list);
+extern int syncReleaseFence(hwc_display_contents_1_t *list, int display);
 
 #endif

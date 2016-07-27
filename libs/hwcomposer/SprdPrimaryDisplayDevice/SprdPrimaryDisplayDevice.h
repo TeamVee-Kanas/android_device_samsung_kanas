@@ -86,7 +86,7 @@ public:
      *  Traversal layer list, and find layers which comply with SprdDisplayPlane
      *  and mark them as HWC_OVERLAY.
      * */
-    int prepare(hwc_display_contents_1_t *list, unsigned int accelerator);
+    int prepare(hwc_display_contents_1_t *list);
 
     /*
      *  Post layers to SprdDisplayPlane.
@@ -113,7 +113,7 @@ public:
     /*
      *  Recycle DispalyPlane buffer for saving memory.
      * */
-    int reclaimPlaneBuffer(bool condition);
+    int reclaimPlaneBuffer(SprdHWLayer *YUVLayer);
 
 private:
     FrameBufferInfo   *mFBInfo;
@@ -128,10 +128,6 @@ private:
     SprdUtil          *mUtil;
     bool mPostFrameBuffer;
     int mHWCDisplayFlag;
-    unsigned int mAcceleratorMode;
-#ifdef PROCESS_VIDEO_USE_GSP
-    GSP_CAPABILITY_T *mGXPCap;
-#endif
     int mDebugFlag;
     int mDumpFlag;
 
@@ -149,14 +145,6 @@ private:
      *  And then attach these HWC_OVERLAY layers to SprdDisplayPlane.
      * */
     int attachToDisplayPlane(int DisplayFlag);
-
-    int AcceleratorProbe(void *pData);
-
-    int AcceleratorAdapt(int DisplayDeviceAccelerator);
-
-#ifdef HWC_DUMP_CAMERA_SHAKE_TEST
-    void dumpCameraShakeTest(hwc_display_contents_1_t* list);
-#endif
 };
 
 #endif

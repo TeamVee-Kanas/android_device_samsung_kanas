@@ -48,10 +48,9 @@
 #include "gralloc_priv.h"
 #include "sc8825/dcam_hal.h"
 
-#include "../SprdHWLayer.h"
+#include "SprdHWLayer.h"
 #include "SprdFrameBufferHAL.h"
 #include "SprdPrimaryDisplayDevice.h"
-#include "../SprdUtil.h"
 
 
 using namespace android;
@@ -78,12 +77,11 @@ public:
           mFBLayerCount(0),
           mRGBLayerFullScreenFlag(false),
           mList(NULL),
-          mAcceleratorMode(ACCELERATOR_NON),
           mDisableHWCFlag(false),
           mSkipLayerFlag(false),
-          mPData(NULL),
           mDebugFlag(0), mDumpFlag(0)
     {
+
     }
     ~SprdHWLayerList();
 
@@ -91,7 +89,7 @@ public:
      *  traversal HWLayer list
      *  and change some geometry.
      * */
-    int updateGeometry(hwc_display_contents_1_t *list, int accelerator);
+    int updateGeometry(hwc_display_contents_1_t *list);
 
     /*
      *  traversal HWLayer list again,
@@ -147,12 +145,6 @@ public:
         return mFBLayerCount;
     }
 
-#ifdef PROCESS_VIDEO_USE_GSP
-    inline void transforGXPCapParameters(GSP_CAPABILITY_T *GXPCap)
-    {
-        mPData = static_cast<void *>(GXPCap);
-    }
-#endif
 private:
     FrameBufferInfo* mFBInfo;
     SprdHWLayer *mLayerList;
@@ -167,13 +159,11 @@ private:
     int mFBLayerCount;
     bool mRGBLayerFullScreenFlag;
     hwc_display_contents_1_t *mList;
-    int mAcceleratorMode;
     bool mDisableHWCFlag;
     bool mSkipLayerFlag;
-    void *mPData;
-    uint32_t mPrivateFlag[2];
     int mDebugFlag;
     int mDumpFlag;
+
 
     /*
      *  Filter OSD layer
@@ -184,15 +174,6 @@ private:
      *  Filter video layer
      * */
     int prepareVideoLayer(SprdHWLayer *l);
-
-    /*
-     *  Prepare for GSP/GPP HW device.
-     *  return value:
-     *      0: use GSP/GPP to accelerate.
-     *      1: use OverlayComposer to accelerate.
-     *      -1: cannot find available accelerator.
-     * */
-    int prepareForGXP(SprdHWLayer *l);
 
 #ifdef OVERLAY_COMPOSER_GPU
     int prepareOverlayComposerLayer(SprdHWLayer *l);

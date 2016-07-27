@@ -45,11 +45,7 @@
 
 #include <cutils/log.h>
 
-#include "../SprdHWLayer.h"
-#include "SprdVDLayerList.h"
-#include "SprdVirtualPlane.h"
 #include "../SprdDisplayDevice.h"
-#include "SprdWIDIBlit.h"
 #include "../AndroidFence.h"
 #include "../dump.h"
 
@@ -70,26 +66,16 @@ public:
      *  Traversal Virtual Display layer list.
      *  Find which layers comply with Virtual Display standards.
      * */
-    int prepare(hwc_display_contents_1_t *list, unsigned int accelerator);
+    int prepare(hwc_display_contents_1_t *list);
 
     /*
      *  Post found layers to Virtual Display Device.
      * */
     int commit(hwc_display_contents_1_t *list);
 
-    /*
-     *  Init Virtual Display.
-     * */
-    int Init();
-
 private:
-    SprdVDLayerList *mLayerList;
-    SprdVirtualPlane *mDisplayPlane;
-    sp<SprdWIDIBlit> mBlit;
-    bool mHWCCopy;
     int mDebugFlag;
     int mDumpFlag;
-
 };
 
 #endif

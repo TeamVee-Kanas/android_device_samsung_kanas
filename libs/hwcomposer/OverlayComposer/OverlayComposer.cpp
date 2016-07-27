@@ -40,6 +40,7 @@ namespace android
 
 OverlayComposer::OverlayComposer(SprdPrimaryPlane *displayPlane, sp<OverlayNativeWindow> NativeWindow)
     : mDisplayPlane(displayPlane),
+      mClearBuffer(false),
       mList(NULL),
       mNumLayer(0), InitFlag(0),
       mWindow(NativeWindow),
@@ -109,8 +110,11 @@ bool OverlayComposer::threadLoop()
     /* *******************************
      * waiting display
      * *******************************/
-    sem_wait(&displaySem);
-    swapBuffers();
+    if (mClearBuffer == false)
+    {
+        sem_wait(&displaySem);
+        swapBuffers();
+    }
 
     return true;
 }
@@ -341,25 +345,26 @@ void OverlayComposer::deInitOpenGLES()
 
 void OverlayComposer::caculateLayerRect(hwc_layer_1_t  *l, struct LayerRect *rect, struct LayerRect *rV)
 {
+
+    const native_handle_t *pNativeHandle = l->handle;
+    struct private_handle_t *private_h = (struct private_handle_t *)pNativeHandle;
+
+    int sourceLeft   = (int)(l->sourceCropf.left);
+    int sourceTop    = (int)(l->sourceCropf.top);
+    int sourceRight  = (int)(l->sourceCropf.right);
+    int sourceBottom = (int)(l->sourceCropf.bottom);
+
     if (l == NULL || rect == NULL)
     {
         ALOGE("overlayDevice::caculateLayerRect, input parameters is NULL");
         return;
     }
 
-    const native_handle_t *pNativeHandle = l->handle;
-    struct private_handle_t *private_h = (struct private_handle_t *)pNativeHandle;
-
-    if (pNativeHandle == NULL || private_h == NULL)
+    if (private_h == NULL)
     {
         ALOGE("overlayDevice::caculateLayerRect, buffer handle is NULL");
         return;
     }
-    int sourceLeft   = (int)(l->sourceCropf.left);
-    int sourceTop    = (int)(l->sourceCropf.top);
-    int sourceRight  = (int)(l->sourceCropf.right);
-    int sourceBottom = (int)(l->sourceCropf.bottom);
-
 
     rect->left = MAX(sourceLeft, 0);
     rect->top = MAX(sourceTop, 0);
@@ -395,6 +400,12 @@ int OverlayComposer::composerHWLayers()
 {
     int status = -1;
     uint32_t numLayer = 0;
+
+    if (mClearBuffer)
+    {
+        ClearOverlayComposerBuffer();
+        return 0;
+    }
 
     if (mList == NULL)
     {
@@ -466,8 +477,7 @@ int OverlayComposer::composerHWLayers()
 
         L->setLayerTransform(pL->transform);
         L->setLayerRect(&r, &rV);
-        L->setLayerAlpha(pL->planeAlpha);
-        L->setBlendFlag(pL->blending);
+        //L->setLayerAlpha(pL->alpha);
 
         L->draw();
 
@@ -506,6 +516,17 @@ bool OverlayComposer::onComposer(hwc_display_contents_1_t* l)
     sem_wait(&doneSem);
 
     return true;
+}
+
+void OverlayComposer::onClearOverlayComposerBuffer()
+{
+    mClearBuffer = true;
+
+    sem_post(&cmdSem);
+
+    sem_wait(&doneSem);
+
+    mClearBuffer = false;
 }
 
 void OverlayComposer::onDisplay()

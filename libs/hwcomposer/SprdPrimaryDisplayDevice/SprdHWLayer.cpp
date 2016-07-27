@@ -19,47 +19,66 @@
  **                   Edit    History                                         *
  **---------------------------------------------------------------------------*
  ** DATE          Module              DESCRIPTION                             *
- ** 03/06/2014    Hardware Composer   Responsible for processing some         *
+ ** 22/09/2013    Hardware Composer   Responsible for processing some         *
  **                                   Hardware layers. These layers comply    *
  **                                   with display controller specification,  *
  **                                   can be displayed directly, bypass       *
  **                                   SurfaceFligner composition. It will     *
  **                                   improve system performance.             *
  ******************************************************************************
- ** File: SprdTrace.h                 DESCRIPTION                             *
- **                                   Add Android Framework trace info        *
-                                      for debugging                           *
+ ** File: SprdHWLayer.cpp             DESCRIPTION                             *
+ **                                   Mainly responsible for filtering HWLayer*
+ **                                   list, find layers that meet OverlayPlane*
+ **                                   and PrimaryPlane specifications and then*
+ **                                   mark them as HWC_OVERLAY.               *
  ******************************************************************************
  ******************************************************************************
  ** Author:         zhongjun.chen@spreadtrum.com                              *
  *****************************************************************************/
 
+#include "SprdHWLayer.h"
 
-#ifndef _SPRD_TRACE_H_
-#define _SPRD_TRACE_H_
+using namespace android;
 
+bool SprdHWLayer:: checkRGBLayerFormat()
+{
+    hwc_layer_1_t *layer = mAndroidLayer;
+    const native_handle_t *pNativeHandle = layer->handle;
+    struct private_handle_t *privateH = (struct private_handle_t *)pNativeHandle;
 
-#define ATRACE_TAG (ATRACE_TAG_GRAPHICS | ATRACE_TAG_HAL)
+    if (layer == NULL || privateH == NULL)
+    {
+        return false;
+    }
 
-#include <utils/Trace.h>
-#include <cutils/trace.h>
+    if (privateH->format != HAL_PIXEL_FORMAT_RGBA_8888 &&
+        privateH->format != HAL_PIXEL_FORMAT_RGBX_8888 &&
+        privateH->format != HAL_PIXEL_FORMAT_RGB_565)
+    {
+        return false;
+    }
 
+    return true;
+}
 
-#ifdef HWC_DEBUG_TRACE
+bool SprdHWLayer:: checkYUVLayerFormat()
+{
+    hwc_layer_1_t *layer = mAndroidLayer;
+    const native_handle_t *pNativeHandle = layer->handle;
+    struct private_handle_t *privateH = (struct private_handle_t *)pNativeHandle;
 
-#define HWC_TRACE_CALL                                            ATRACE_CALL()
-#define HWC_TRACE_BEGIN_VSYNC        atrace_begin(ATRACE_TAG, "SprdVsyncEvent")
-#define HWC_TRACE_BEGIN_WIDIBLIT   atrace_begin(ATRACE_TAG, "SprdWIDIBLITWork")
-#define HWC_TRACE_END                                     atrace_end(ATRACE_TAG)
+    if (layer == NULL || privateH == NULL)
+    {
+        return false;
+    }
 
-#else
+    if (privateH->format != HAL_PIXEL_FORMAT_YCbCr_420_SP &&
+        privateH->format != HAL_PIXEL_FORMAT_YCrCb_420_SP &&
+        privateH->format != HAL_PIXEL_FORMAT_YV12)
+    {
+        return false;
+    }
 
-#define HWC_TRACE_CALL
-#define HWC_TRACE_BEGIN_VSYNC
-#define HWC_TRACE_BEGIN_WIDIBLIT
-#define HWC_TRACE_END
+    return true;
+}
 
-#endif
-
-
-#endif

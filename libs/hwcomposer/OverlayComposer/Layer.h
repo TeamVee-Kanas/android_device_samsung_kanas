@@ -67,7 +67,6 @@ public:
     bool setPlaneTransform(uint8_t orientation);
     bool setLayerRect(struct LayerRect *rect, struct LayerRect *rV);
     void setLayerAlpha(float alpha);
-    void setBlendFlag(int32_t blendFlag);
 
 private:
     OverlayComposer* mComposer;

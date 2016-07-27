@@ -107,6 +107,8 @@ public:
     /* Start the HWLayer composer command */
     bool onComposer(hwc_display_contents_1_t* l);
 
+    void onClearOverlayComposerBuffer();
+
     /* Start display the composered Overlay Buffer */
     void onDisplay();
 
@@ -114,6 +116,7 @@ private:
 
     /* Overlay composer Info */
     SprdPrimaryPlane *mDisplayPlane;
+    bool mClearBuffer;
 
     /* Hardware Layer Info */
     hwc_display_contents_1_t* mList;

@@ -70,7 +70,7 @@ int SprdExternalDisplayDevice:: getDisplayAttributes(DisplayAttributes *dpyAttri
     return 0;
 }
 
-int SprdExternalDisplayDevice:: prepare(hwc_display_contents_1_t *list, unsigned int accelerator)
+int SprdExternalDisplayDevice:: prepare(hwc_display_contents_1_t *list)
 {
     queryDebugFlag(&mDebugFlag);
 
@@ -97,6 +97,8 @@ int SprdExternalDisplayDevice:: commit(hwc_display_contents_1_t *list)
 
     waitAcquireFence(list);
 
+    syncReleaseFence(list, DISPLAY_EXTERNAL);
+
     FBTargetLayer = &(list->hwLayers[list->numHwLayers - 1]);
     if (FBTargetLayer == NULL)
     {
@@ -122,9 +124,9 @@ int SprdExternalDisplayDevice:: commit(hwc_display_contents_1_t *list)
         }
     }
 
-    HWCBufferSyncBuild(list, DISPLAY_EXTERNAL);
-
     closeAcquireFDs(list);
+
+    createRetiredFence(list);
 
     return 0;
 }
