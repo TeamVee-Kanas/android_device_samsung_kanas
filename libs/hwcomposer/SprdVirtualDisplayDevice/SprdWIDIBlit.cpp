@@ -35,7 +35,7 @@
  ** Author:         zhongjun.chen@spreadtrum.com                              *
  *****************************************************************************/
 
-#include <binder/MemoryHeapIon.h>
+#include <binder/MemoryHeapIon.SPRD.h>
 #include "SprdWIDIBlit.h"
 #include "../SprdHWLayer.h"
 #include "../SprdPrimaryDisplayDevice/SprdFrameBufferHAL.h"
