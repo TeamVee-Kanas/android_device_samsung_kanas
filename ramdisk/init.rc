@@ -11,7 +11,6 @@ import /init.${ro.zygote}.rc
 import /init.trace.rc
 # Include CM's extra init file
 import /init.cm.rc
-import /init.swap.rc
 
 
 on early-init
@@ -439,9 +438,17 @@ on property:sys.init_log_level=*
     loglevel ${sys.init_log_level}
 
 on charger
-    mount ext4 /dev/block/mmcblk0p18 /system ro,barrier=1 wait
-    exec sfsck /dev/block/mmcblk0p20 ext4
-    mount ext4 /dev/block/mmcblk0p20 /data noatime,nosuid,nodev,nomblk_io_submit wait,encryptable=footer,check
+
+    chmod 0666 /dev/log/radio
+    chmod 0666 /dev/log/main
+    chmod 0666 /dev/log/event
+
+    mount ext4 /dev/block/mmcblk0p23 /system ro,barrier=1 wait
+    exec sfsck /dev/block/mmcblk0p25 ext4
+    mount ext4 /dev/block/mmcblk0p25 /data noatime,nosuid,nodev,nomblk_io_submit wait,encryptable=footer,check
+
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor powersave
+
     class_start charger
 
 on property:vold.decrypt=trigger_reset_main
@@ -497,9 +504,10 @@ service healthd /sbin/healthd
     critical
     seclabel u:r:healthd:s0
 
-service lpm /system/bin/lpm
+service healthd-charger /charger
     class charger
     critical
+    seclabel u:r:healthd:s0
 
 service console /system/bin/sh
     class core
@@ -566,13 +574,6 @@ service prepare_param /system/bin/prepare_param.sh /dev/block/platform/sprd-sdhc
     user root
     group root
     oneshot
-
-#service ril-daemon /system/bin/rild
-#    class main
-#    socket rild stream 660 root radio
-#    socket rild-debug stream 660 radio system
-#    user root
-#    group radio cache inet misc audio sdcard_rw qcom_diag log
 
 service surfaceflinger /system/bin/surfaceflinger
     class core
@@ -660,11 +661,6 @@ service mdnsd /system/bin/mdnsd
     socket mdnsd stream 0660 mdnsr inet
     disabled
     oneshot
-
-service mobex-daemon /system/bin/npsmobex
-    class main
-    user system
-    group system radio inet sdcard_r sdcard_rw media_rw shell
 
 service pre-recovery /system/bin/uncrypt
     class main

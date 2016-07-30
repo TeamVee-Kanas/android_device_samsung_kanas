@@ -15,12 +15,12 @@
 # The gps config appropriate for this device
 $(call inherit-product, device/common/gps/gps_us_supl.mk)
 
-$(call inherit-product-if-exists, vendor/samsung/vivalto3gvn/vivalto3gvn-vendor.mk)
+$(call inherit-product-if-exists, vendor/samsung/core33g/core33g-vendor.mk)
 
 DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
 # This device is hdpi
-PRODUCT_AAPT_CONFIG := normal hdpi
+PRODUCT_AAPT_CONFIG := normal
 PRODUCT_AAPT_PREF_CONFIG := hdpi
 
 # Boot animation
@@ -36,28 +36,18 @@ PRODUCT_PROPERTY_OVERRIDES += \
 ROOTDIR_FILES := \
 	$(LOCAL_PATH)/ramdisk/init.rc \
 	$(LOCAL_PATH)/ramdisk/init.board.rc \
-	$(LOCAL_PATH)/ramdisk/init.scx15.rc \
-	$(LOCAL_PATH)/ramdisk/init.scx15.usb.rc \
-	$(LOCAL_PATH)/ramdisk/init.scx15_ss.rc \
-	$(LOCAL_PATH)/ramdisk/init.vivalto3gvn.rc \
-	$(LOCAL_PATH)/ramdisk/init.vivalto3gvn_base.rc \
+	$(LOCAL_PATH)/ramdisk/init.recovery.board.rc \
+	$(LOCAL_PATH)/ramdisk/init.sc8830.rc \
+	$(LOCAL_PATH)/ramdisk/init.sc8830.usb.rc \
+	$(LOCAL_PATH)/ramdisk/init.sc8830_ss.rc \
+	$(LOCAL_PATH)/ramdisk/init.core33g.rc \
+	$(LOCAL_PATH)/ramdisk/init.core33g_base.rc \
 	$(LOCAL_PATH)/ramdisk/init.wifi.rc \
-	$(LOCAL_PATH)/ramdisk/init.swap.rc \
-	$(LOCAL_PATH)/ramdisk/init.recovery.scx15.rc \
-	$(LOCAL_PATH)/ramdisk/ueventd.scx15.rc \
-	$(LOCAL_PATH)/ramdisk/fstab.scx15 \
-	$(LOCAL_PATH)/ramdisk/fstab.swap \
-	$(LOCAL_PATH)/ramdisk/property_contexts
+	$(LOCAL_PATH)/ramdisk/ueventd.sc8830.rc \
+	$(LOCAL_PATH)/ramdisk/fstab.sc8830
 
 PRODUCT_COPY_FILES += \
 	$(foreach f,$(ROOTDIR_FILES),$(f):root/$(notdir $(f)))
-
-PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/ramdisk/etc/extra.fstab:recovery/root/etc/extra.fstab
-
-# Override phone-hdpi-512-dalvik-heap to match value on stock
-PRODUCT_PROPERTY_OVERRIDES += \
-	dalvik.vm.heapgrowthlimit=48m
 
 # enable Google-specific location features,
 # like NetworkLocationProvider and LocationCollector
@@ -66,18 +56,18 @@ PRODUCT_PROPERTY_OVERRIDES += \
 	ro.com.google.networklocation=1
 
 # Dalvik heap config
-$(call inherit-product, frameworks/native/build/phone-hdpi-512-dalvik-heap.mk)
+$(call inherit-product, frameworks/native/build/phone-hdpi-2048-dalvik-heap.mk)
+$(call inherit-product, frameworks/native/build/phone-xxhdpi-2048-hwui-memory.mk)
 
 # For userdebug builds
 ADDITIONAL_DEFAULT_PROPERTIES += \
 	ro.secure=0 \
 	ro.adb.secure=0 \
 	ro.debuggable=1 \
-	persist.sys.root_access=1 \
 	persist.service.adb.enable=1
 
 PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
-PRODUCT_NAME := full_vivalto3gvn
-PRODUCT_DEVICE := vivalto3gvn
+PRODUCT_NAME := full_core33g
+PRODUCT_DEVICE := core33g
 PRODUCT_BRAND := samsung
-PRODUCT_MODEL := SM-G313HZ
+PRODUCT_MODEL := SM-G360H

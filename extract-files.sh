@@ -1,7 +1,7 @@
 #!/bin/sh
 
 VENDOR=samsung
-DEVICE=vivalto3gvn
+DEVICE=core33g
 
 BASE=../../../vendor/$VENDOR/$DEVICE/proprietary
 
@@ -11,7 +11,8 @@ for FILE in `cat proprietary-files.txt | grep -v ^# | grep -v ^$`; do
     if [ ! -d $BASE/$DIR ]; then
         mkdir -p $BASE/$DIR
     fi
-    adb pull /system/$FILE $BASE/$FILE
+    cp ../../../../stock\ G360H/$FILE $BASE/$FILE
+    echo "$FILE pulled"
 done
 
 ./setup-makefiles.sh
