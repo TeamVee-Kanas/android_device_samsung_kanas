@@ -1,9 +1,9 @@
-From a684bbe8e6750c59268128c11ceebd10255053fa Mon Sep 17 00:00:00 2001
+From 87f30c59452ff573ebdaa78ce412cf23b16ada9a Mon Sep 17 00:00:00 2001
 From: Caio Oliveira <caiooliveirafarias0@gmail.com>
-Date: Sat, 23 Jul 2016 19:42:50 -0300
-Subject: [PATCH] Merge SPRD changes from @ngoquang2708
+Date: Sat, 30 Jul 2016 13:57:03 -0300
+Subject: [PATCH] hardware: libhardware: Merge SPRD changes
 
-Change-Id: I6aef4a77d0cbd8d9fe515799a0d1d0c2adf5c034
+Change-Id: I8eaf71e3dcfde8bd045328d592e8c2e3e8792f0c
 Signed-off-by: Caio Oliveira <caiooliveirafarias0@gmail.com>
 ---
  include/hardware/audio.h        |  13 ++

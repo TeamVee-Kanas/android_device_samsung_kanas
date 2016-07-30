@@ -1,25 +1,22 @@
-From 3f863a364ee8f36cf05a1784c26217862431fb41 Mon Sep 17 00:00:00 2001
+From 0b4fc547ead172b917b521cdab00fa7137012bff Mon Sep 17 00:00:00 2001
 From: Caio Oliveira <caiooliveirafarias0@gmail.com>
-Date: Wed, 27 Jul 2016 13:25:28 -0300
-Subject: [PATCH] frameworks: native: Merge combined SPRD changes from
- @ngoquang2708
+Date: Sat, 30 Jul 2016 13:52:31 -0300
+Subject: [PATCH] frameworks: native: Merge SPRD changes
 
-Change-Id: I476f50b1d5e1619f692a12e7138171e59b3d4fa5
+Change-Id: I520cdb8dbda474074c08280cacc9138333aa3de4
 Signed-off-by: Caio Oliveira <caiooliveirafarias0@gmail.com>
 ---
  include/binder/MemoryHeapIon.SPRD.h        |  71 ++++
- include/media/openmax/OMX_Audio.h          |  20 ++
  include/media/openmax/OMX_IVCommon.h       |   3 +
- include/media/openmax/OMX_Index.h          |  19 ++
+ include/media/openmax/OMX_Index.h          |  17 +
  include/ui/PixelFormat.h                   |   3 +
  libs/binder/Android.mk                     |  13 +
- libs/binder/IPCThreadState.cpp             |   8 +-
+ libs/binder/IPCThreadState.cpp             |   6 +
  libs/binder/MemoryHeapIon.SPRD.cpp         | 499 +++++++++++++++++++++++++++++
- libs/ui/GraphicBufferAllocator.cpp         |   4 +
  services/surfaceflinger/Android.mk         |   4 +
  services/surfaceflinger/DisplayDevice.cpp  |   8 +
  services/surfaceflinger/SurfaceFlinger.cpp |   4 +
- 12 files changed, 655 insertions(+), 1 deletion(-)
+ 10 files changed, 628 insertions(+)
  create mode 100644 include/binder/MemoryHeapIon.SPRD.h
  create mode 100644 libs/binder/MemoryHeapIon.SPRD.cpp
 
@@ -100,44 +97,6 @@ index 0000000..3e155f4
 +}; // namespace android
 +
 +#endif // ANDROID_MEMORY_HEAP_ION_H
-diff --git a/include/media/openmax/OMX_Audio.h b/include/media/openmax/OMX_Audio.h
-index 2aa6c95..9dd3778 100644
---- a/include/media/openmax/OMX_Audio.h
-+++ b/include/media/openmax/OMX_Audio.h
-@@ -135,6 +135,9 @@ typedef enum OMX_AUDIO_CODINGTYPE {
-     OMX_AUDIO_CodingAC3,         /**< Any variant of AC3 encoded data */
-     OMX_AUDIO_CodingAPE,         /**< Any variant of APE encoded data */
-     OMX_AUDIO_CodingDTS,         /**< Any variant of DTS encoded data */
-+#ifdef SPRD_HARDWARE
-+    OMX_AUDIO_CodingIMAADPCM,    /**< Any variant of IMAADPCM encoded data */
-+#endif
-     OMX_AUDIO_CodingFFMPEG,      /**< Any variant of FFMPEG encoded data */
-     OMX_AUDIO_CodingMax = 0x7FFFFFFF
- } OMX_AUDIO_CODINGTYPE;
-@@ -573,6 +576,23 @@ typedef struct OMX_AUDIO_PARAM_ADPCMTYPE {
- } OMX_AUDIO_PARAM_ADPCMTYPE; 
- 
- 
-+#ifdef SPRD_HARDWARE
-+/** IMAADPCM stream format parameters */
-+typedef struct OMX_AUDIO_PARAM_IMAADPCMTYPE {
-+    OMX_U32 nSize;              /**< size of the structure in bytes */
-+    OMX_VERSIONTYPE nVersion;   /**< OMX specification version information */
-+    OMX_U32 nPortIndex;         /**< port that this structure applies to */
-+    OMX_U32 nChannels;          /**< Number of channels in the data stream (not
-+                                     necessarily the same as the number of channels
-+                                     to be rendered. */
-+    OMX_U32 nBitsPerSample;     /**< Number of bits in each sample */
-+    OMX_U32 nSampleRate;        /**< Sampling rate of the source data.  Use 0 for
-+                                    variable or unknown sampling rate. */
-+    OMX_U32 nBlockAlign;        /**< Sampling rate of the source data.	Use 0 for
-+                                    variable or unknown sampling rate. */
-+} OMX_AUDIO_PARAM_IMAADPCMTYPE;
-+#endif
-+
- /** G723 rate */
- typedef enum OMX_AUDIO_G723RATE {
-     OMX_AUDIO_G723ModeUnused = 0,  /**< AMRNB Mode unused / unknown */
 diff --git a/include/media/openmax/OMX_IVCommon.h b/include/media/openmax/OMX_IVCommon.h
 index 940911e..dca6a53 100644
 --- a/include/media/openmax/OMX_IVCommon.h
@@ -153,10 +112,10 @@ index 940911e..dca6a53 100644
  } OMX_COLOR_FORMATTYPE;
  
 diff --git a/include/media/openmax/OMX_Index.h b/include/media/openmax/OMX_Index.h
-index ab3f55e..f991a4a 100644
+index ab3f55e..3c6dd26 100644
 --- a/include/media/openmax/OMX_Index.h
 +++ b/include/media/openmax/OMX_Index.h
-@@ -277,6 +277,25 @@ typedef enum OMX_INDEXTYPE {
+@@ -277,6 +277,23 @@ typedef enum OMX_INDEXTYPE {
         private indexes are not guaranteed unique and therefore should
         only be sent to the appropriate component. */
  
@@ -175,15 +134,13 @@ index ab3f55e..f991a4a 100644
 +    OMX_IndexParamPrependSPSPPSToIDR           = 0x7F000015,
 +#define SPRD_INDEX_CONFIG_THUMBNAIL_MODE "OMX.sprd.index.ThumbnailMode"
 +    OMX_IndexConfigThumbnailMode               = 0x7F000016,
-+
-+    OMX_IndexParamAudioImaAdpcm = 0x7FA7B09C,/**< reference: OMX_AUDIO_PARAM_IMAADPCMTYPE */
 +#endif
 +
  #ifdef MTK_HARDWARE
      OMX_IndexVendorMtkOmxVdecTimeSource        = 0x7F000001,
      OMX_IndexVendorMtkOmxVdecThumbnailMode     = 0x7F00000A,
 diff --git a/include/ui/PixelFormat.h b/include/ui/PixelFormat.h
-index 79a29bc..5d960b1 100644
+index 79a29bc..52f802c 100644
 --- a/include/ui/PixelFormat.h
 +++ b/include/ui/PixelFormat.h
 @@ -63,6 +63,9 @@ enum {
@@ -191,7 +148,7 @@ index 79a29bc..5d960b1 100644
      PIXEL_FORMAT_RGBA_5551   = 6,                           // 16-bit ARGB
      PIXEL_FORMAT_RGBA_4444   = 7,                           // 16-bit ARGB
 +#ifdef SPRD_HARDWARE
-+    PIXEL_FORMAT_YCbCr_420_SP= 25,
++    PIXEL_FORMAT_YCbCr_420_SP = 25,
 +#endif
  };
  
@@ -235,16 +192,14 @@ index 7861fef..60f7319 100644
  LOCAL_LDLIBS += -lpthread
  LOCAL_MODULE := libbinder
 diff --git a/libs/binder/IPCThreadState.cpp b/libs/binder/IPCThreadState.cpp
-index 74b03a1..70d7771 100644
+index 74b03a1..89344bd 100644
 --- a/libs/binder/IPCThreadState.cpp
 +++ b/libs/binder/IPCThreadState.cpp
-@@ -1139,9 +1139,15 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
-     case BR_SPAWN_LOOPER:
+@@ -1140,8 +1140,14 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
          mProcess->spawnPooledThread(false);
          break;
--        
-+
-+    //For Bug#305183, to deal with BR_TRANSACTION_COMPLETE cmd
+         
++    // For Bug #305183, to deal with BR_TRANSACTION_COMPLETE cmd
 +    case BR_TRANSACTION_COMPLETE:
 +        ALOGE("*** BAD COMMAND: BR_TRANSACTION_COMPLETE(%x) for executeCommand from Binder driver\n", cmd);
 +        break;
@@ -760,21 +715,6 @@ index 0000000..48b68db
 +
 +// ---------------------------------------------------------------------------
 +}; // namespace android
-diff --git a/libs/ui/GraphicBufferAllocator.cpp b/libs/ui/GraphicBufferAllocator.cpp
-index 016692e..f8fee3d 100644
---- a/libs/ui/GraphicBufferAllocator.cpp
-+++ b/libs/ui/GraphicBufferAllocator.cpp
-@@ -130,6 +130,10 @@ status_t GraphicBufferAllocator::alloc(uint32_t w, uint32_t h,
-     }
- #endif
- 
-+#ifdef SPRD_HARDWARE
-+    if (format == HAL_PIXEL_FORMAT_YCbCr_420_I)
-+        format = HAL_PIXEL_FORMAT_YCbCr_420_SP;
-+#endif
-     err = mAllocDev->alloc(mAllocDev, w, h, format, usage, handle, stride);
-     ALOGW_IF(err, "alloc(%u, %u, %d, %08x, ...) failed %d (%s)",
-             w, h, format, usage, err, strerror(-err));
 diff --git a/services/surfaceflinger/Android.mk b/services/surfaceflinger/Android.mk
 index 0166b89..bf1fbde 100644
 --- a/services/surfaceflinger/Android.mk
