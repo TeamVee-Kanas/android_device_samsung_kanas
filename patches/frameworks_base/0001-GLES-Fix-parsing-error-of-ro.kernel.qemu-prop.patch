@@ -1,0 +1,28 @@
+From c0fb604f708ecdfe6574023838d37316b6f2de5b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ng=C3=B4=20Minh=20Quang?= <ngoquang2708@gmail.com>
+Date: Fri, 29 Jan 2016 23:48:03 +0700
+Subject: [PATCH 1/2] GLES: Fix parsing error of ro.kernel.qemu prop
+
+Some board set ro.kernel.qemu to 0 and the old code failed to handle it.
+
+Change-Id: I6d3cbaf485d338be75bfc66fd48c9d28aa9cd398
+---
+ core/jni/android_view_GLES20Canvas.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/jni/android_view_GLES20Canvas.cpp b/core/jni/android_view_GLES20Canvas.cpp
+index b720e73..2c2842a 100644
+--- a/core/jni/android_view_GLES20Canvas.cpp
++++ b/core/jni/android_view_GLES20Canvas.cpp
+@@ -966,7 +966,7 @@ static void android_view_GLES20Canvas_flushLayerUpdates(JNIEnv* env, jobject cla
+ static jboolean android_view_GLES20Canvas_isAvailable(JNIEnv* env, jobject clazz) {
+ #ifdef USE_OPENGL_RENDERER
+     char prop[PROPERTY_VALUE_MAX];
+-    if (property_get("ro.kernel.qemu", prop, NULL) == 0) {
++    if (property_get("ro.kernel.qemu", prop, NULL) == 0 || atoi(prop) == 0) {
+         // not in the emulator
+         return JNI_TRUE;
+     }
+-- 
+1.9.1
+

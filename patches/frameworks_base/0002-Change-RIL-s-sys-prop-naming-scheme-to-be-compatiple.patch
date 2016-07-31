@@ -1,16 +1,14 @@
-diff --git a/core/jni/android_view_GLES20Canvas.cpp b/core/jni/android_view_GLES20Canvas.cpp
-index b720e73..2c2842a 100644
---- a/core/jni/android_view_GLES20Canvas.cpp
-+++ b/core/jni/android_view_GLES20Canvas.cpp
-@@ -966,7 +966,7 @@ static void android_view_GLES20Canvas_flushLayerUpdates(JNIEnv* env, jobject cla
- static jboolean android_view_GLES20Canvas_isAvailable(JNIEnv* env, jobject clazz) {
- #ifdef USE_OPENGL_RENDERER
-     char prop[PROPERTY_VALUE_MAX];
--    if (property_get("ro.kernel.qemu", prop, NULL) == 0) {
-+    if (property_get("ro.kernel.qemu", prop, NULL) == 0 || atoi(prop) == 0) {
-         // not in the emulator
-         return JNI_TRUE;
-     }
+From 90cbf834c6d3f58e25565ce89754ce271c6cfe8d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ng=C3=B4=20Minh=20Quang?= <ngoquang2708@gmail.com>
+Date: Wed, 16 Mar 2016 21:07:19 +0700
+Subject: [PATCH 2/2] Change RIL's sys prop naming scheme to be compatiple with
+ vivalto3gvn
+
+Change-Id: Iefb18086149a62e44afc200cbd5136aa8f259f12
+---
+ .../android/telephony/MSimTelephonyManager.java    | 52 ++++++----------------
+ 1 file changed, 14 insertions(+), 38 deletions(-)
+
 diff --git a/telephony/java/android/telephony/MSimTelephonyManager.java b/telephony/java/android/telephony/MSimTelephonyManager.java
 index ef9889b..89ad489 100644
 --- a/telephony/java/android/telephony/MSimTelephonyManager.java
@@ -88,3 +86,6 @@ index ef9889b..89ad489 100644
      }
  
      /**
+-- 
+1.9.1
+

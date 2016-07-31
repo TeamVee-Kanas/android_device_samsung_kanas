@@ -1,3 +1,14 @@
+From c7870ef169d30000e1f58304cd46adeaf9893d75 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ng=C3=B4=20Minh=20Quang?= <ngoquang2708@gmail.com>
+Date: Sat, 6 Feb 2016 22:26:45 +0700
+Subject: [PATCH] add SPRD pcm_set_samplerate() function
+
+Change-Id: I23f32c2b56af3b271cc2f820fc4dd7436bac7c3b
+---
+ include/tinyalsa/asoundlib.h |  3 ++
+ pcm.c                        | 99 ++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 93 insertions(+), 9 deletions(-)
+
 diff --git a/include/tinyalsa/asoundlib.h b/include/tinyalsa/asoundlib.h
 index c1cef00..311498e 100644
 --- a/include/tinyalsa/asoundlib.h
@@ -13,7 +24,7 @@ index c1cef00..311498e 100644
   * MIXER API
   */
 diff --git a/pcm.c b/pcm.c
-index b941796..d52f0ad 100644
+index b941796..37566e0 100644
 --- a/pcm.c
 +++ b/pcm.c
 @@ -198,7 +198,7 @@ static int oops(struct pcm *pcm, int e, const char *fmt, ...)
@@ -38,7 +49,7 @@ index b941796..d52f0ad 100644
      if (pcm == &bad_pcm)
          return 0;
  
-+    if(!pcm)
++    if (!pcm)
 +        return 0;
 +
      pcm_hw_munmap_status(pcm);
@@ -73,7 +84,7 @@ index b941796..d52f0ad 100644
      return 0;
  }
  
-@@ -945,22 +952,30 @@ int pcm_mmap_transfer(struct pcm *pcm, const void *buffer, unsigned int bytes)
+@@ -945,18 +952,26 @@ int pcm_mmap_transfer(struct pcm *pcm, const void *buffer, unsigned int bytes)
      int err = 0, frames, avail;
      unsigned int offset = 0, count;
  
@@ -84,7 +95,7 @@ index b941796..d52f0ad 100644
      if (bytes == 0)
          return 0;
  
-+    if(!pcm)
++    if (!pcm)
 +	return -ENODEV;
 +
      count = pcm_bytes_to_frames(pcm, bytes);
@@ -102,11 +113,6 @@ index b941796..d52f0ad 100644
          }
  
          /* start the audio if we reach the threshold */
--	    if (!pcm->running &&
-+        if (!pcm->running &&
-             (pcm->buffer_size - avail) >= pcm->config.start_threshold) {
-             if (pcm_start(pcm) < 0) {
-                fprintf(stderr, "start error: hw 0x%x app 0x%x avail 0x%x\n",
 @@ -981,13 +996,17 @@ int pcm_mmap_transfer(struct pcm *pcm, const void *buffer, unsigned int bytes)
  
              if (pcm->wait_for_avail_min && (avail < pcm->config.avail_min)) {
@@ -117,11 +123,11 @@ index b941796..d52f0ad 100644
                  pcm->wait_for_avail_min = 0;
 -
 -                if (pcm->flags & PCM_NOIRQ)
-+                if (pcm->flags & PCM_NOIRQ){
++                if (pcm->flags & PCM_NOIRQ) {
                      time = (pcm->config.avail_min - avail) / pcm->noirq_frames_per_msec;
-+                    if(!max_timeout) {
-+                        max_timeout = ((pcm->buffer_size + write_frames)/pcm->noirq_frames_per_msec)*5;
-+                        if(max_timeout < 3000)
++                    if (!max_timeout) {
++                        max_timeout = ((pcm->buffer_size + write_frames)/pcm->noirq_frames_per_msec) * 5;
++                        if (max_timeout < 3000)
 +                            max_timeout = 3000;
 +                    }
 +                }
@@ -133,9 +139,9 @@ index b941796..d52f0ad 100644
                      return err;
                  }
 +
-+                if(max_timeout && (0 == err)) {
++                if (max_timeout && (0 == err)) {
 +                    total_timeout += time;
-+                    if(total_timeout >= max_timeout) {
++                    if (total_timeout >= max_timeout) {
 +                        oops(pcm, err, "wait timeout error : hw 0x%x app 0x%x avail 0x%x\n",
 +                            (unsigned int)pcm->mmap_status->hw_ptr,
 +                            (unsigned int)pcm->mmap_control->appl_ptr,
@@ -147,7 +153,7 @@ index b941796..d52f0ad 100644
                  continue;
              }
          }
-@@ -1054,3 +1085,54 @@ int pcm_ioctl(struct pcm *pcm, int request, ...)
+@@ -1054,3 +1085,53 @@ int pcm_ioctl(struct pcm *pcm, int request, ...)
  
      return ioctl(pcm->fd, request, arg);
  }
@@ -157,12 +163,12 @@ index b941796..d52f0ad 100644
 +{
 +    struct snd_pcm_hw_params params;
 +
-+    if(pcm->fd < 0){
-+        fprintf(stderr, "%s, error pcm_fd (%d) ",__func__,pcm->fd);
++    if (pcm->fd < 0) {
++        fprintf(stderr, "%s, error pcm_fd (%d) ", __func__, pcm->fd);
 +        return -1;
 +    }
-+    if(config == NULL){
-+        fprintf(stderr, "%s, error pcm config ",__func__);
++    if (config == NULL) {
++        fprintf(stderr, "%s, error pcm config ", __func__);
 +        return -1;
 +    }
 +
@@ -183,7 +189,7 @@ index b941796..d52f0ad 100644
 +
 +    if (flags & PCM_NOIRQ) {
 +        if (!(flags & PCM_MMAP)) {
-+            fprintf(stderr, "%s, noirq only currently supported with mmap(). ", __func__);
++            fprintf(stderr, "%s, noirq only currently supported with mmap()", __func__);
 +            return -1;
 +        }
 +        params.flags |= SNDRV_PCM_HW_PARAMS_NO_PERIOD_WAKEUP;
@@ -196,9 +202,11 @@ index b941796..d52f0ad 100644
 +                   SNDRV_PCM_ACCESS_RW_INTERLEAVED);
 +
 +    if (ioctl(pcm->fd, SNDRV_PCM_IOCTL_HW_PARAMS, &params)) {
-+        fprintf(stderr, "%s, SNDRV_PCM_IOCTL_HW_PARAMS failed (%s) ", __func__,strerror(errno));
++        fprintf(stderr, "%s, SNDRV_PCM_IOCTL_HW_PARAMS failed (%s)", __func__, strerror(errno));
 +        return -1;
 +    }
-+//    ALOGW("%s, out,samplerate (%d) ",__func__,samplerate);
 +    return 0;
 +}
+-- 
+1.9.1
+

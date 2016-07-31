@@ -1,0 +1,28 @@
+From fd4e6150d4a8fb9e5ec94b27a6369f84e23ab143 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ng=C3=B4=20Minh=20Quang?= <ngoquang2708@gmail.com>
+Date: Tue, 29 Mar 2016 12:32:11 +0700
+Subject: [PATCH 2/2] Add missing OMX components' names for SPRD's codecs
+
+Change-Id: Ib2006829f483e9f72be374ab216b8e87fa6753f0
+---
+ media/libstagefright/ACodec.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/media/libstagefright/ACodec.cpp b/media/libstagefright/ACodec.cpp
+index 24905de..e41f85f 100755
+--- a/media/libstagefright/ACodec.cpp
++++ b/media/libstagefright/ACodec.cpp
+@@ -912,6 +912,10 @@ void ACodec::setNativeWindowColorFormat(OMX_COLOR_FORMATTYPE &eNativeColorFormat
+ {
+     // In case of Samsung decoders, we set proper native color format for the Native Window
+     if (!strcasecmp(mComponentName.c_str(), "OMX.SEC.AVC.Decoder")
++        || !strcasecmp(mComponentName.c_str(), "OMX.sprd.mpeg4.decoder")
++        || !strcasecmp(mComponentName.c_str(), "OMX.sprd.h263.decoder")
++        || !strcasecmp(mComponentName.c_str(), "OMX.sprd.h264.decoder")
++        || !strcasecmp(mComponentName.c_str(), "OMX.sprd.vpx.decoder")
+         || !strcasecmp(mComponentName.c_str(), "OMX.SEC.FP.AVC.Decoder")) {
+         switch (eNativeColorFormat) {
+             case OMX_COLOR_FormatYUV420SemiPlanar:
+-- 
+1.9.1
+
